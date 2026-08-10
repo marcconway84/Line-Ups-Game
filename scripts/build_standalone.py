@@ -32,6 +32,11 @@ STYLE = """
    The manager's tactics board: board green, chalk markings, brass discs.
    Deliberately a single visual world - there is no light variant of a tactics
    board - so every colour is painted explicitly rather than inherited.
+
+   Layout rule for the whole file: the page never scrolls. The body is exactly
+   one viewport tall, every screen is a flex/grid column inside it, and the
+   pitch takes whatever height is left over. Nothing is sized in a way that can
+   push the controls off the bottom.
    --------------------------------------------------------------------------- */
 :root {
   --board:      #0e2a20;
@@ -50,37 +55,42 @@ STYLE = """
   --data: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   --rule: 1px solid var(--chalk-line);
-  --pad: clamp(0.9rem, 3vw, 1.4rem);
+  --gap: clamp(0.35rem, 1.2vh, 0.7rem);
 }
 
 * { box-sizing: border-box; }
 
-body {
+html, body {
+  height: 100%;
   margin: 0;
-  padding: 0 0 3rem;
+  overflow: hidden;             /* the page itself never scrolls */
+  overscroll-behavior: none;
+}
+
+body {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
   background: var(--board-deep);
   color: var(--chalk);
   font-family: var(--body);
-  line-height: 1.55;
+  line-height: 1.45;
   -webkit-text-size-adjust: 100%;
 }
 
-.wrap { max-width: 33rem; margin: 0 auto; padding: 0 var(--pad); }
-
 /* -------------------------------------------------------------- masthead */
 .masthead {
+  flex: none;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem var(--pad) 0.85rem;
-  max-width: 33rem;
-  margin: 0 auto;
+  padding: 0.5rem clamp(0.7rem, 3vw, 1.2rem);
   border-bottom: var(--rule);
 }
 .wordmark {
   font-family: var(--display);
-  font-size: 1.6rem;
+  font-size: clamp(1.1rem, 3.4vh, 1.45rem);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   background: none;
@@ -91,14 +101,14 @@ body {
   line-height: 1;
 }
 .wordmark span { color: var(--brass); }
-.masthead nav { display: flex; gap: 0.9rem; }
+.masthead nav { display: flex; gap: 0.8rem; }
 
 .textlink {
   background: none;
   border: 0;
   color: var(--chalk-dim);
-  font: 600 0.78rem/1 var(--body);
-  letter-spacing: 0.08em;
+  font: 600 0.72rem/1 var(--body);
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   cursor: pointer;
   padding: 0.3rem 0;
@@ -106,78 +116,95 @@ body {
 }
 .textlink:hover, .textlink:focus-visible { color: var(--brass); border-bottom-color: var(--brass); }
 
-/* ----------------------------------------------------------------- views */
-.view { display: none; }
-.view.on { display: block; }
+/* ----------------------------------------------------------------- stage */
+.stage {
+  flex: 1 1 auto;
+  min-height: 0;                /* lets children shrink instead of overflowing */
+  padding: var(--gap) clamp(0.7rem, 3vw, 1.2rem);
+}
 
+.view { display: none; height: 100%; min-height: 0; }
+.view.on { display: flex; flex-direction: column; }
+
+/* ------------------------------------------------------------------ home */
+#v-home {
+  justify-content: center;
+  gap: var(--gap);
+  max-width: 34rem;
+  margin: 0 auto;
+  width: 100%;
+  text-align: center;
+}
 .eyebrow {
-  font: 700 0.7rem/1 var(--body);
-  letter-spacing: 0.18em;
+  font: 700 0.64rem/1 var(--body);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--brass);
-  margin: 1.6rem 0 0.5rem;
+  margin: 0;
 }
-
 h1 {
   font-family: var(--display);
-  font-size: clamp(2.4rem, 11vw, 3.6rem);
+  font-size: clamp(1.8rem, 7vh, 3rem);
   line-height: 0.95;
-  letter-spacing: 0.01em;
   text-transform: uppercase;
-  margin: 0 0 0.6rem;
+  margin: 0;
   text-wrap: balance;
 }
-.standfirst { color: var(--chalk-dim); margin: 0 0 1.6rem; max-width: 34ch; }
+.standfirst {
+  color: var(--chalk-dim);
+  margin: 0 auto;
+  max-width: 36ch;
+  font-size: clamp(0.8rem, 1.9vh, 0.95rem);
+}
 
-/* ------------------------------------------------------------ team sheet */
-.sheet {
+.decks { display: grid; gap: var(--gap); grid-template-columns: 1fr; }
+@media (min-width: 34rem) { .decks { grid-template-columns: 1fr 1fr; } }
+
+.deck {
   border: var(--rule);
   background: var(--panel);
-  padding: 1rem;
-  margin-bottom: 0.9rem;
+  padding: clamp(0.55rem, 1.6vh, 0.9rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  text-align: left;
 }
-.sheet h2 {
+.deck h2 {
   font-family: var(--display);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-size: 1.15rem;
-  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  margin: 0;
 }
-.sheet p { margin: 0 0 0.85rem; color: var(--chalk-dim); font-size: 0.88rem; }
+.deck p { margin: 0; color: var(--chalk-dim); font-size: 0.76rem; }
+.deck .btn { margin-top: auto; }
 
-.grades { display: flex; gap: 0; border: var(--rule); margin-bottom: 0.6rem; }
+.grades { display: flex; border: var(--rule); }
 .grade {
   flex: 1;
   background: none;
   border: 0;
   border-right: var(--rule);
   color: var(--chalk-dim);
-  font: 700 0.75rem/1 var(--body);
+  font: 700 0.68rem/1 var(--body);
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 0.6rem 0.2rem;
+  padding: 0.45rem 0.2rem;
   cursor: pointer;
 }
 .grade:last-child { border-right: 0; }
 .grade[aria-checked="true"] { background: var(--brass); color: var(--board-deep); }
 
-.terms {
-  font-family: var(--data);
-  font-size: 0.72rem;
-  color: var(--chalk-dim);
-  margin: 0 0 0.9rem;
-  min-height: 1.2em;
-}
+.terms { font-family: var(--data); font-size: 0.64rem; color: var(--chalk-dim); margin: 0; }
 
 .btn {
-  display: inline-block;
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 0.8rem;
   border: 1px solid var(--brass);
   background: var(--brass);
   color: var(--board-deep);
-  font: 700 0.82rem/1 var(--body);
-  letter-spacing: 0.12em;
+  font: 700 0.75rem/1 var(--body);
+  letter-spacing: 0.11em;
   text-transform: uppercase;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -185,96 +212,113 @@ h1 {
 .btn:hover:not(:disabled) { background: var(--brass-deep); border-color: var(--brass-deep); }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-quiet { background: none; color: var(--chalk); border-color: var(--chalk-line); }
-.btn-quiet:hover:not(:disabled) { background: var(--panel-2); border-color: var(--chalk-dim); color: var(--chalk); }
+.btn-quiet:hover:not(:disabled) { background: var(--panel-2); border-color: var(--chalk-dim); }
 .btn-flag { background: none; color: var(--flag); border-color: rgba(226, 87, 76, 0.45); }
-.btn-flag:hover:not(:disabled) { background: rgba(226, 87, 76, 0.12); border-color: var(--flag); color: var(--flag); }
+.btn-flag:hover:not(:disabled) { background: rgba(226, 87, 76, 0.12); border-color: var(--flag); }
 
-/* ------------------------------------------------------------- scoreline */
-.record {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border: var(--rule);
-  border-bottom: 0;
-  margin: 1.4rem 0 0.5rem;
-}
-.record div {
-  border-bottom: var(--rule);
-  border-right: var(--rule);
-  padding: 0.55rem 0.4rem;
-  text-align: center;
-}
+.record { display: grid; grid-template-columns: repeat(3, 1fr); border: var(--rule); border-bottom: 0; margin: 0; }
+.record div { border-bottom: var(--rule); border-right: var(--rule); padding: 0.35rem 0.3rem; text-align: center; }
 .record div:nth-child(3n) { border-right: 0; }
-.record dt {
-  font: 700 0.62rem/1 var(--body);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--chalk-dim);
+.record dt { font: 700 0.55rem/1 var(--body); letter-spacing: 0.11em; text-transform: uppercase; color: var(--chalk-dim); }
+.record dd { margin: 0.15rem 0 0; font-family: var(--data); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.footnote { color: var(--chalk-dim); font-size: 0.66rem; margin: 0; }
+
+/* A landscape phone has barely any height. Drop the scene-setting copy and put
+   the record on a single row so the menu still fits without scrolling. */
+@media (max-height: 30rem) {
+  #v-home .eyebrow, #v-home .standfirst, #v-home .footnote { display: none; }
+  #v-home .deck p { display: none; }
+  .record { grid-template-columns: repeat(6, 1fr); }
+  .record div:nth-child(3n) { border-right: var(--rule); }
+  .record div:last-child { border-right: 0; }
 }
-.record dd {
-  margin: 0.25rem 0 0;
-  font-family: var(--data);
-  font-size: 1.15rem;
-  font-variant-numeric: tabular-nums;
+
+/* -------------------------------------------------------------- pitchside
+   Narrow: one column, board takes the slack (the dugout dissolves into the
+   grid so its parts can sit above and below the pitch).
+   Wide: pitch on the left at full height, everything else in a side column. */
+.pitchside {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  gap: var(--gap);
 }
-.footnote { color: var(--chalk-dim); font-size: 0.75rem; text-align: center; margin: 0.6rem 0 0; }
+.dugout { display: contents; }
+.fixture { order: 1; }
+.tally   { order: 2; }
+.whistle { order: 3; }
+.board-cell { order: 4; }
+.controls, .result { order: 5; }
+
+/* Two columns whenever the viewport is wide, and always in landscape - a short
+   landscape phone is exactly the case where stacking cannot fit. */
+@media (min-width: 52rem), (min-aspect-ratio: 1 / 1) and (min-width: 34rem) {
+  .pitchside {
+    grid-template-columns: minmax(0, 1fr) clamp(17rem, 26vw, 22rem);
+    grid-template-rows: minmax(0, 1fr);
+    gap: clamp(0.8rem, 2vw, 1.6rem);
+    align-items: stretch;
+  }
+  .dugout {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--gap);
+    min-height: 0;
+  }
+  .board-cell { order: 0; }
+}
 
 /* --------------------------------------------------------------- fixture */
-.fixture { padding: 1.1rem 0 0.7rem; text-align: center; }
+.fixture { text-align: center; }
 .fixture .teams {
   font-family: var(--display);
-  font-size: clamp(1.35rem, 5.5vw, 1.8rem);
+  font-size: clamp(1.05rem, 3.6vh, 1.65rem);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   line-height: 1.05;
 }
 .fixture .teams em { font-style: normal; color: var(--chalk-dim); }
-.fixture .meta {
-  font-family: var(--data);
-  font-size: 0.7rem;
-  color: var(--chalk-dim);
-  margin-top: 0.35rem;
-  letter-spacing: 0.02em;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0 0.9rem;
-}
-/* Keep "4-2-3-1" and the like from breaking across lines. */
-.fixture .meta b { font-weight: 400; white-space: nowrap; }
-
 .fixture .badge {
   display: inline-block;
-  margin-top: 0.4rem;
-  padding: 0.14rem 0.5rem;
+  margin-top: 0.25rem;
+  padding: 0.1rem 0.45rem;
   border: 1px solid var(--brass);
   color: var(--brass);
-  font: 700 0.58rem/1.4 var(--body);
+  font: 700 0.54rem/1.4 var(--body);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
-
-/* -------------------------------------------------------------- the board */
-.tally {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  border: var(--rule);
-  border-bottom: 0;
+.fixture .meta {
+  font-family: var(--data);
+  font-size: clamp(0.58rem, 1.5vh, 0.7rem);
+  color: var(--chalk-dim);
+  margin-top: 0.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 0.7rem;
 }
-.tally div { border-right: var(--rule); border-bottom: var(--rule); padding: 0.4rem 0.3rem; text-align: center; }
+.fixture .meta b { font-weight: 400; white-space: nowrap; }
+
+/* ----------------------------------------------------------------- tally */
+.tally { display: grid; grid-template-columns: repeat(4, 1fr); border: var(--rule); margin: 0; }
+.tally div { border-right: var(--rule); padding: 0.3rem 0.2rem; text-align: center; }
 .tally div:last-child { border-right: 0; }
 .tally span {
   display: block;
-  font: 700 0.58rem/1 var(--body);
-  letter-spacing: 0.12em;
+  font: 700 0.52rem/1 var(--body);
+  letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--chalk-dim);
 }
 .tally strong {
   display: block;
   font-family: var(--data);
-  font-size: 1.05rem;
+  font-size: clamp(0.85rem, 2.2vh, 1.05rem);
   font-variant-numeric: tabular-nums;
-  margin-top: 0.2rem;
+  margin-top: 0.1rem;
   font-weight: 500;
 }
 .tally .late strong { color: var(--flag); }
@@ -283,143 +327,162 @@ h1 {
 .whistle i { display: block; height: 100%; width: 100%; background: var(--brass); transition: width 0.95s linear; }
 .whistle i.late { background: var(--flag); }
 
-.board {
-  position: relative;
-  aspect-ratio: 68 / 95;
-  border: var(--rule);
-  border-top: 0;
-  background:
-    repeating-linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.028) 0 6.25%,
-      transparent 6.25% 12.5%
-    ),
-    var(--board);
-  overflow: hidden;
+/* ----------------------------------------------------------------- board
+   The cell is a size container, so the pitch can be the larger of "as tall as
+   the space allows" and "as wide as the space allows" while keeping its shape.
+   That is what stops it ever overflowing the screen. */
+.board-cell {
+  min-height: 0;
+  min-width: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
 }
+.board {
+  aspect-ratio: 68 / 95;
+  block-size: min(100cqh, calc(100cqw * 95 / 68));
+  container-type: size;
+  position: relative;
+  border: var(--rule);
+  overflow: hidden;
+  background-color: var(--board);
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.045) 0,
+    rgba(255, 255, 255, 0.045) 12.5%,
+    transparent 12.5%,
+    transparent 25%
+  );
+}
+
 .marks { position: absolute; inset: 0; }
 .marks > i { position: absolute; border: 1px solid var(--chalk-line); display: block; }
 .marks .circle { width: 30%; aspect-ratio: 1; border-radius: 50%; left: 35%; top: 50%; transform: translateY(-50%); }
 .marks .half { left: 0; right: 0; top: 50%; border-width: 0 0 1px; }
-.marks .area { left: 21%; width: 58%; height: 14%; }
+.marks .area { left: 21%; width: 58%; height: 13%; }
 .marks .area.own { bottom: 0; border-bottom: 0; }
 .marks .area.opp { top: 0; border-top: 0; }
-.marks .six { left: 34%; width: 32%; height: 6%; }
-.marks .six.own { bottom: 0; border-bottom: 0; }
-.marks .six.opp { top: 0; border-top: 0; }
 
+/* Player chips scale with the pitch, so they stay readable at any size. */
 .man {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 22%;
-  min-width: 60px;
+  width: 23cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.22rem;
+  gap: 0.15rem;
   text-align: center;
 }
 .disc {
-  width: 30px;
-  height: 30px;
+  inline-size: clamp(20px, 9cqmin, 46px);
+  block-size: clamp(20px, 9cqmin, 46px);
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font: 700 0.6rem/1 var(--body);
-  letter-spacing: 0.04em;
+  font-family: var(--body);
+  font-weight: 700;
+  font-size: clamp(7px, 2.7cqmin, 14px);
   border: 1px solid var(--chalk-line);
   background: rgba(10, 31, 24, 0.72);
   color: var(--chalk-dim);
-  transition: transform 0.2s;
 }
 .tag {
-  font-size: 0.66rem;
+  font-size: clamp(7px, 2.9cqmin, 15px);
   font-weight: 600;
   line-height: 1.15;
-  padding: 0.1rem 0.28rem;
+  padding: 0.05rem 0.25rem;
   background: rgba(10, 31, 24, 0.82);
   color: var(--chalk-dim);
   max-width: 100%;
   overflow-wrap: break-word;
 }
 .man.named .disc { background: var(--brass); border-color: var(--brass); color: var(--board-deep); }
-.man.named .tag { color: var(--chalk); }
 .man.spotted .disc { background: var(--chalk-dim); border-color: var(--chalk); color: var(--board-deep); }
-.man.spotted .tag { color: var(--chalk); }
 .man.told .disc { background: var(--brass-deep); border-color: var(--brass); color: var(--board-deep); }
-.man.told .tag { color: var(--chalk); }
 .man.gone .disc { background: rgba(226, 87, 76, 0.85); border-color: var(--flag); color: var(--board-deep); }
+.man.named .tag, .man.spotted .tag, .man.told .tag { color: var(--chalk); }
 .man.gone .tag { color: #f6cfcb; }
 .man.new .disc { animation: place 0.4s ease-out; }
 @keyframes place { 0% { transform: scale(0.5); } 60% { transform: scale(1.22); } 100% { transform: scale(1); } }
 
-/* --------------------------------------------------------------- the call */
-.call { display: flex; gap: 0.5rem; margin-top: 0.8rem; }
+/* -------------------------------------------------------------- controls */
+.controls { display: flex; flex-direction: column; gap: 0.4rem; }
+/* An author `display` beats the `hidden` attribute, so say it explicitly. */
+.controls[hidden] { display: none; }
+.call { display: flex; gap: 0.4rem; }
 .call input {
   flex: 1;
   min-width: 0;
-  padding: 0.7rem 0.8rem;
+  padding: 0.55rem 0.7rem;
   border: var(--rule);
   background: var(--panel);
   color: var(--chalk);
-  font: 400 1rem var(--body);
+  font: 400 1rem var(--body);   /* 1rem keeps iOS from zooming on focus */
 }
 .call input::placeholder { color: var(--chalk-dim); }
 .call input:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
-.call .btn { width: auto; padding-inline: 1.1rem; }
+.call .btn { width: auto; padding-inline: 0.9rem; }
 
-.verdict { min-height: 1.5em; margin: 0.5rem 0 0.7rem; font-size: 0.88rem; font-weight: 600; }
+.verdict { min-height: 1.3em; margin: 0; font-size: 0.8rem; font-weight: 600; }
 .verdict.good { color: var(--brass); }
 .verdict.bad { color: var(--flag); }
 .verdict.note { color: var(--chalk-dim); }
 
-.bench { display: flex; gap: 0.5rem; }
-.bench .btn { flex: 1; font-size: 0.68rem; letter-spacing: 0.08em; padding: 0.6rem 0.3rem; }
+.bench { display: flex; gap: 0.4rem; }
+.bench .btn { font-size: 0.6rem; letter-spacing: 0.06em; padding: 0.5rem 0.25rem; }
 
 /* ---------------------------------------------------------------- result */
-.final { text-align: center; padding-top: 1.2rem; }
-.final .outcome {
+.result { display: flex; flex-direction: column; gap: 0.4rem; }
+.result[hidden] { display: none; }
+.headline { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; }
+.outcome {
   font-family: var(--display);
-  font-size: clamp(1.8rem, 8vw, 2.6rem);
+  font-size: clamp(1.1rem, 3.4vh, 1.7rem);
   text-transform: uppercase;
-  letter-spacing: 0.02em;
-  margin: 0 0 0.1rem;
+  margin: 0;
   text-wrap: balance;
 }
-.final .points {
+.points {
   font-family: var(--data);
-  font-size: 3rem;
+  font-size: clamp(1.5rem, 5vh, 2.4rem);
   font-variant-numeric: tabular-nums;
   color: var(--brass);
   line-height: 1;
-  margin: 0.3rem 0 0.1rem;
+  margin: 0;
 }
-.final .points small { font-family: var(--body); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--chalk-dim); display: block; margin-top: 0.35rem; }
-
-.ledger { width: 100%; border-collapse: collapse; margin: 1.2rem 0; font-size: 0.85rem; }
-.ledger td { padding: 0.4rem 0.1rem; border-bottom: var(--rule); color: var(--chalk-dim); text-align: left; }
+.points small {
+  font-family: var(--body);
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+  margin-left: 0.4rem;
+}
+.ledger { width: 100%; border-collapse: collapse; font-size: 0.72rem; }
+.ledger td { padding: 0.15rem 0; border-bottom: var(--rule); color: var(--chalk-dim); text-align: left; }
 .ledger td:last-child { text-align: right; color: var(--chalk); font-family: var(--data); font-variant-numeric: tabular-nums; }
 .ledger tr.sum td { color: var(--chalk); font-weight: 700; border-bottom: 0; }
 
-.report { text-align: left; color: var(--chalk-dim); font-size: 0.88rem; }
-.report a { color: var(--brass); }
-
-.sheetlist { list-style: none; padding: 0; margin: 0.5rem 0 1.4rem; text-align: left; }
-.sheetlist li { display: flex; align-items: center; gap: 0.7rem; padding: 0.42rem 0.1rem; border-bottom: var(--rule); font-size: 0.9rem; }
-.sheetlist .slot {
-  font-family: var(--data);
-  font-size: 0.62rem;
+.report {
   color: var(--chalk-dim);
-  min-width: 2.6rem;
-  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
 }
-.sheetlist .mark { margin-left: auto; font: 700 0.62rem/1 var(--body); letter-spacing: 0.1em; text-transform: uppercase; }
-.mark.named { color: var(--brass); }
-.mark.spotted { color: var(--chalk-dim); }
-.mark.told { color: var(--brass-deep); }
-.mark.gone { color: var(--flag); }
+.report a { color: var(--brass); }
+.again { display: flex; gap: 0.4rem; }
 
-.again { display: flex; gap: 0.5rem; }
+/* On a short or narrow screen the result panel has to give way, or it squeezes
+   the finished XI off the pitch. The total is the number that matters; the
+   itemised breakdown is a luxury for bigger screens. */
+@media (max-height: 46rem), (max-width: 30rem) {
+  .result .ledger { display: none; }
+  .report { -webkit-line-clamp: 2; line-clamp: 2; }
+}
 
 /* ---------------------------------------------------------------- dialog */
 dialog {
@@ -428,18 +491,14 @@ dialog {
   color: var(--chalk);
   max-width: 30rem;
   width: calc(100% - 2rem);
-  padding: 1.25rem;
+  max-height: 85dvh;
+  overflow: auto;               /* only place a scrollbar is ever allowed */
+  padding: 1.1rem;
 }
 dialog::backdrop { background: rgba(6, 18, 14, 0.78); }
-dialog h2 {
-  font-family: var(--display);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0 0 0.7rem;
-  font-size: 1.3rem;
-}
-dialog ul { padding-left: 1.1rem; color: var(--chalk-dim); font-size: 0.88rem; }
-dialog li { margin-bottom: 0.45rem; }
+dialog h2 { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 0.6rem; font-size: 1.2rem; }
+dialog ul { padding-left: 1.1rem; color: var(--chalk-dim); font-size: 0.82rem; margin: 0 0 0.9rem; }
+dialog li { margin-bottom: 0.35rem; }
 dialog strong { color: var(--chalk); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -457,7 +516,7 @@ MARKUP = """
   </nav>
 </header>
 
-<main class="wrap">
+<main class="stage">
   <section class="view on" id="v-home">
     <p class="eyebrow">The football lineup quiz</p>
     <h1>Name the eleven</h1>
@@ -466,22 +525,24 @@ MARKUP = """
       Fill in everyone you recognise before the whistle.
     </p>
 
-    <div class="sheet">
-      <h2>Kick off</h2>
-      <p>A lineup drawn at random from the archive.</p>
-      <div class="grades" role="radiogroup" aria-label="Difficulty">
-        <button class="grade" type="button" role="radio" aria-checked="false" data-grade="easy">Easy</button>
-        <button class="grade" type="button" role="radio" aria-checked="true" data-grade="medium">Medium</button>
-        <button class="grade" type="button" role="radio" aria-checked="false" data-grade="hard">Hard</button>
+    <div class="decks">
+      <div class="deck">
+        <h2>Kick off</h2>
+        <p>A lineup drawn at random from the archive.</p>
+        <div class="grades" role="radiogroup" aria-label="Difficulty">
+          <button class="grade" type="button" role="radio" aria-checked="false" data-grade="easy">Easy</button>
+          <button class="grade" type="button" role="radio" aria-checked="true" data-grade="medium">Medium</button>
+          <button class="grade" type="button" role="radio" aria-checked="false" data-grade="hard">Hard</button>
+        </div>
+        <p class="terms" id="terms"></p>
+        <button class="btn" type="button" id="go-quick">Start a lineup</button>
       </div>
-      <p class="terms" id="terms"></p>
-      <button class="btn" type="button" id="go-quick">Start a lineup</button>
-    </div>
 
-    <div class="sheet">
-      <h2>Today's XI</h2>
-      <p id="daily-note">One lineup a day, the same for everyone who plays it.</p>
-      <button class="btn btn-quiet" type="button" id="go-daily">Play today's lineup</button>
+      <div class="deck">
+        <h2>Today's XI</h2>
+        <p id="daily-note">One lineup a day, the same for everyone who plays it.</p>
+        <button class="btn btn-quiet" type="button" id="go-daily">Play today's lineup</button>
+      </div>
     </div>
 
     <dl class="record" id="home-record"></dl>
@@ -489,48 +550,53 @@ MARKUP = """
   </section>
 
   <section class="view" id="v-game">
-    <div class="fixture" id="fixture"></div>
-    <dl class="tally">
-      <div><span>Named</span><strong id="t-found">0/11</strong></div>
-      <div id="t-clock-cell"><span>Clock</span><strong id="t-clock">0:00</strong></div>
-      <div><span>Points</span><strong id="t-points">0</strong></div>
-      <div><span>Misses</span><strong id="t-misses">0</strong></div>
-    </dl>
-    <div class="whistle"><i id="whistle-bar"></i></div>
-
-    <div class="board" id="board">
-      <div class="marks" aria-hidden="true">
-        <i class="circle"></i><i class="half"></i>
-        <i class="area own"></i><i class="area opp"></i>
-        <i class="six own"></i><i class="six opp"></i>
+    <div class="pitchside">
+      <div class="board-cell">
+        <div class="board" id="board">
+          <div class="marks" aria-hidden="true">
+            <i class="circle"></i><i class="half"></i>
+            <i class="area own"></i><i class="area opp"></i>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <form class="call" id="call-form" autocomplete="off">
-      <input id="call-input" type="text" placeholder="Name a player&hellip;" aria-label="Name a player"
-             maxlength="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-      <button class="btn" type="submit">Call</button>
-    </form>
-    <p class="verdict" id="verdict" role="status" aria-live="polite"></p>
+      <div class="dugout">
+        <div class="fixture" id="fixture"></div>
 
-    <div class="bench">
-      <button class="btn btn-quiet" type="button" id="hint-initials">Initials</button>
-      <button class="btn btn-quiet" type="button" id="hint-reveal">Name one</button>
-      <button class="btn btn-flag" type="button" id="concede">Concede</button>
-    </div>
-  </section>
+        <dl class="tally">
+          <div><span>Named</span><strong id="t-found">0/11</strong></div>
+          <div id="t-clock-cell"><span>Clock</span><strong id="t-clock">0:00</strong></div>
+          <div><span>Points</span><strong id="t-points">0</strong></div>
+          <div><span>Misses</span><strong id="t-misses">0</strong></div>
+        </dl>
+        <div class="whistle"><i id="whistle-bar"></i></div>
 
-  <section class="view" id="v-final">
-    <div class="final">
-      <p class="outcome" id="outcome"></p>
-      <p class="points"><span id="final-points">0</span><small>points</small></p>
-      <table class="ledger" id="ledger"></table>
-      <div class="report" id="report"></div>
-      <p class="eyebrow">The full eleven</p>
-      <ol class="sheetlist" id="full-xi"></ol>
-      <div class="again">
-        <button class="btn" type="button" id="go-again">Another lineup</button>
-        <button class="btn btn-quiet" type="button" id="go-home">Menu</button>
+        <div class="controls" id="controls">
+          <form class="call" id="call-form" autocomplete="off">
+            <input id="call-input" type="text" placeholder="Name a player&hellip;" aria-label="Name a player"
+                   maxlength="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <button class="btn" type="submit">Call</button>
+          </form>
+          <p class="verdict" id="verdict" role="status" aria-live="polite"></p>
+          <div class="bench">
+            <button class="btn btn-quiet" type="button" id="hint-initials">Initials</button>
+            <button class="btn btn-quiet" type="button" id="hint-reveal">Name one</button>
+            <button class="btn btn-flag" type="button" id="concede">Concede</button>
+          </div>
+        </div>
+
+        <div class="result" id="result" hidden>
+          <div class="headline">
+            <p class="outcome" id="outcome"></p>
+            <p class="points"><span id="final-points">0</span><small>points</small></p>
+          </div>
+          <table class="ledger" id="ledger"></table>
+          <div class="report" id="report"></div>
+          <div class="again">
+            <button class="btn" type="button" id="go-again">Another lineup</button>
+            <button class="btn btn-quiet" type="button" id="go-home">Menu</button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -558,7 +624,6 @@ MARKUP = """
   </div>
 </dialog>
 """
-
 SCRIPT = r"""
 <script>
 (function () {
@@ -743,10 +808,9 @@ SCRIPT = r"""
 
   function newGame(lineup, gradeKey, seed, mode) {
     var g = GRADES[gradeKey];
-    var free = pickFreeSlots(g.free, seed);
     return {
       lineup: lineup, grade: g, gradeKey: gradeKey, mode: mode,
-      free: free, named: [], told: [],
+      free: pickFreeSlots(g.free, seed), named: [], told: [],
       initialsBought: false, penalty: 0, misses: 0,
       secondsLeft: g.seconds, over: null, result: null
     };
@@ -811,17 +875,16 @@ SCRIPT = r"""
 
   /* ==================================================================== views */
   function show(name) {
-    ["home", "game", "final"].forEach(function (v) {
+    ["home", "game"].forEach(function (v) {
       $("v-" + v).classList.toggle("on", v === name);
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function paintTerms() {
     var g = GRADES[grade];
     $("terms").textContent =
       (g.free ? g.free + " shown at kick-off" : "nothing shown") +
-      "  ·  " + clock(g.seconds) + " on the clock  ·  ×" + g.mult + " points";
+      "  ·  " + clock(g.seconds) + " clock  ·  ×" + g.mult + " points";
   }
 
   function paintHome() {
@@ -865,9 +928,7 @@ SCRIPT = r"""
       seasonSide ? l.season + " season" : longDate(l.date),
       l.venue,
       l.formation.join("-")
-    ].filter(Boolean).forEach(function (part) {
-      meta.appendChild(el("b", null, part));
-    });
+    ].filter(Boolean).forEach(function (part) { meta.appendChild(el("b", null, part)); });
     box.appendChild(meta);
   }
 
@@ -939,6 +1000,8 @@ SCRIPT = r"""
 
   function begin(lineup, gradeKey, seed, mode) {
     game = newGame(lineup, gradeKey, seed, mode);
+    $("controls").hidden = false;
+    $("result").hidden = true;
     show("game");
     paintFixture(lineup);
     paintBoard(game);
@@ -950,8 +1013,8 @@ SCRIPT = r"""
   }
 
   function startQuick() {
-    var l = LINEUPS[Math.floor(Math.random() * LINEUPS.length)];
-    begin(l, grade, "quick:" + Math.random(), "quick");
+    begin(LINEUPS[Math.floor(Math.random() * LINEUPS.length)], grade,
+          "quick:" + Math.random(), "quick");
   }
 
   function startDaily() {
@@ -965,10 +1028,11 @@ SCRIPT = r"""
     game.result = scoreRound(game.named.length, hidden(game).length === 0,
                              game.secondsLeft, game.penalty, game.grade);
     logResult(game);
-    paintBoard(game);
+    paintBoard(game);           // the finished XI stays on the pitch
     paintTally(game);
-    paintFinal(game);
-    show("final");
+    paintResult(game);
+    $("controls").hidden = true;
+    $("result").hidden = false;
   }
 
   function call(event) {
@@ -979,8 +1043,7 @@ SCRIPT = r"""
     if (!text) return;
     input.value = "";
 
-    var open = hidden(game);
-    var res = matchGuess(text, candidates(game, open));
+    var res = matchGuess(text, candidates(game, hidden(game)));
 
     if (res.status === "match") {
       var slot = res.slots[0];
@@ -1031,15 +1094,14 @@ SCRIPT = r"""
   }
 
   var OUTCOMES = { won: "All eleven", lost: "Time up", conceded: "Lineup revealed" };
-  var MARKS = { named: "named", spotted: "given", told: "hinted", gone: "missed" };
 
-  function paintFinal(g) {
+  function paintResult(g) {
     $("outcome").textContent = OUTCOMES[g.over] || "Round over";
     $("final-points").textContent = g.result.total;
 
     var table = $("ledger");
     table.innerHTML = "";
-    [["Players named (" + g.result.named + ")", g.result.points],
+    [["Named (" + g.result.named + ")", g.result.points],
      ["Completed the XI", g.result.bonus],
      ["Time left", g.result.time],
      ["Hints", g.result.penalty ? -g.result.penalty : 0]
@@ -1057,33 +1119,15 @@ SCRIPT = r"""
     var l = g.lineup;
     var report = $("report");
     report.innerHTML = "";
-    var head = el("p");
-    head.appendChild(el("strong", null, l.team + (l.opponent ? " " + (l.score || "v") + " " + l.opponent : "")));
-    report.appendChild(head);
-    var line = el("p");
-    line.appendChild(document.createTextNode(
-      [l.competition, l.venue, l.date].filter(Boolean).join("  ·  ")));
-    report.appendChild(line);
-    if (l.blurb) {
-      var b = el("p", null, l.blurb + " ");
-      if (l.source_url) {
-        var a = el("a", null, "Source");
-        a.href = l.source_url; a.target = "_blank"; a.rel = "noopener noreferrer";
-        b.appendChild(a);
-      }
-      report.appendChild(b);
+    if (l.score && l.opponent) {
+      report.appendChild(el("b", null, l.team + " " + l.score + " " + l.opponent + ". "));
     }
-
-    var list = $("full-xi");
-    list.innerHTML = "";
-    l.players.forEach(function (p, i) {
-      var src = sourceOf(g, i) || "gone";
-      var li = el("li");
-      li.appendChild(el("span", "slot", p.pos));
-      li.appendChild(el("span", null, p.name));
-      li.appendChild(el("span", "mark " + src, MARKS[src]));
-      list.appendChild(li);
-    });
+    if (l.blurb) report.appendChild(document.createTextNode(l.blurb + " "));
+    if (l.source_url) {
+      var a = el("a", null, "Source");
+      a.href = l.source_url; a.target = "_blank"; a.rel = "noopener noreferrer";
+      report.appendChild(a);
+    }
   }
 
   /* =================================================================== wiring */
@@ -1093,11 +1137,13 @@ SCRIPT = r"""
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
   }
 
+  function goHome() { stopClock(); paintHome(); show("home"); }
+
   $("go-quick").addEventListener("click", startQuick);
   $("go-again").addEventListener("click", startQuick);
   $("go-daily").addEventListener("click", startDaily);
-  $("go-home").addEventListener("click", function () { paintHome(); show("home"); });
-  $("home-link").addEventListener("click", function () { stopClock(); paintHome(); show("home"); });
+  $("go-home").addEventListener("click", goHome);
+  $("home-link").addEventListener("click", goHome);
 
   Array.prototype.slice.call(document.querySelectorAll("[data-grade]")).forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -1133,8 +1179,6 @@ SCRIPT = r"""
 })();
 </script>
 """
-
-
 def build(fragment: bool = False) -> str:
     dataset = json.loads(DATASET.read_text(encoding="utf-8"))
     lineups = [
@@ -1198,13 +1242,26 @@ if ("serviceWorker" in navigator) {{
 
 def build_site(out_dir: Path) -> None:
     """Assemble a static, installable site: the game plus its app manifest and icons."""
+    import hashlib
     import shutil
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "index.html").write_text(build(), encoding="utf-8")
+    page = build()
+    (out_dir / "index.html").write_text(page, encoding="utf-8")
     for asset in sorted((REPO_ROOT / "web").iterdir()):
         if asset.is_file():
             shutil.copy2(asset, out_dir / asset.name)
+
+    # Stamp the service worker with a hash of the page. The worker serves from its
+    # cache first, so without a new cache name an already-installed copy would keep
+    # showing the old game after every update.
+    digest = hashlib.sha256(page.encode("utf-8")).hexdigest()[:12]
+    worker = out_dir / "sw.js"
+    worker.write_text(
+        worker.read_text(encoding="utf-8").replace('"lineups-v1"', f'"lineups-{digest}"'),
+        encoding="utf-8",
+    )
+    print(f"Service worker cache: lineups-{digest}")
     # Pages otherwise runs the upload through Jekyll, which ignores some files.
     (out_dir / ".nojekyll").write_text("", encoding="utf-8")
     print(f"Wrote {out_dir}/ ({sum(1 for _ in out_dir.iterdir())} files)")
