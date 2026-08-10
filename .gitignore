@@ -1,0 +1,13 @@
+# Byte-compiled / virtual env
+venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+.DS_Store
+.idea/
+.vscode/
+node_modules/
+
+# local DB files
+*.sqlite
