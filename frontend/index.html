@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Line-Ups &mdash; the football lineup quiz</title>
+  <meta name="description" content="Name the missing players from famous starting XIs." />
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>&#9917;</text></svg>" />
+</head>
+<body>
+  <header class="topbar">
+    <button class="brand" id="brand" type="button">
+      <span class="brand-ball" aria-hidden="true">&#9917;</span>
+      <span>Line&#8209;Ups</span>
+    </button>
+    <nav class="topbar-actions">
+      <button type="button" class="link-button" data-open="howto">How to play</button>
+      <button type="button" class="link-button" data-open="stats">Stats</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ------------------------------------------------------------------ home -->
+    <section id="view-home" class="view is-active">
+      <div class="hero">
+        <h1>Name the eleven.</h1>
+        <p class="hero-sub">
+          A famous starting XI, most of it blanked out. Type the players you recognise
+          before the clock runs out.
+        </p>
+      </div>
+
+      <div class="mode-grid">
+        <article class="card mode-card">
+          <h2>Quick play</h2>
+          <p>A random lineup from the archive. Pick how much help you want.</p>
+          <div class="difficulty" role="radiogroup" aria-label="Difficulty">
+            <button type="button" class="chip" data-difficulty="easy">Easy</button>
+            <button type="button" class="chip is-selected" data-difficulty="medium">Medium</button>
+            <button type="button" class="chip" data-difficulty="hard">Hard</button>
+          </div>
+          <p class="difficulty-detail" id="difficulty-detail"></p>
+          <button type="button" class="button button-primary" id="play-quick">Kick off</button>
+        </article>
+
+        <article class="card mode-card">
+          <h2>Daily challenge</h2>
+          <p>One lineup a day, the same for everyone. Medium difficulty.</p>
+          <p class="daily-status" id="daily-status"></p>
+          <button type="button" class="button" id="play-daily">Play today's XI</button>
+        </article>
+      </div>
+
+      <dl class="stat-strip" id="home-stats"></dl>
+      <p class="archive-note" id="archive-note"></p>
+    </section>
+
+    <!-- ------------------------------------------------------------------ game -->
+    <section id="view-game" class="view">
+      <div class="fixture" id="fixture"></div>
+
+      <div class="hud">
+        <div class="hud-item">
+          <span class="hud-label">Found</span>
+          <strong id="hud-found">0 / 11</strong>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">Time</span>
+          <strong id="hud-time">--:--</strong>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">Score</span>
+          <strong id="hud-score">0</strong>
+        </div>
+        <div class="hud-item hud-item--muted">
+          <span class="hud-label">Misses</span>
+          <strong id="hud-misses">0</strong>
+        </div>
+      </div>
+      <div class="clock-track" aria-hidden="true"><div class="clock-fill" id="clock-fill"></div></div>
+
+      <div class="pitch-wrap">
+        <div class="pitch" id="pitch">
+          <div class="pitch-markings" aria-hidden="true">
+            <div class="centre-circle"></div>
+            <div class="centre-line"></div>
+            <div class="box box-bottom"></div>
+            <div class="box box-top"></div>
+          </div>
+        </div>
+      </div>
+
+      <form class="guess-bar" id="guess-form" autocomplete="off">
+        <input
+          id="guess-input"
+          type="text"
+          name="guess"
+          placeholder="Name a player&hellip;"
+          aria-label="Name a player"
+          maxlength="80"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+        />
+        <button type="submit" class="button button-primary">Guess</button>
+      </form>
+      <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
+
+      <div class="game-actions">
+        <button type="button" class="button button-ghost" id="hint-initials">Initials</button>
+        <button type="button" class="button button-ghost" id="hint-reveal">Give me one</button>
+        <button type="button" class="button button-ghost button-danger" id="give-up">Give up</button>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------------------------------- result -->
+    <section id="view-result" class="view">
+      <div class="card result-card">
+        <p class="result-verdict" id="result-verdict"></p>
+        <p class="result-score"><span id="result-score">0</span> <small>points</small></p>
+        <table class="breakdown" id="result-breakdown"></table>
+        <div class="result-fixture" id="result-fixture"></div>
+        <p class="result-blurb" id="result-blurb"></p>
+        <h3 class="lineup-heading">The full XI</h3>
+        <ol class="lineup-list" id="result-lineup"></ol>
+        <div class="result-actions">
+          <button type="button" class="button button-primary" id="play-again">Another lineup</button>
+          <button type="button" class="button button-ghost" id="back-home">Back to menu</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ------------------------------------------------------------------ dialogs -->
+  <div class="modal" id="modal-howto" hidden>
+    <div class="modal-panel card">
+      <h2>How to play</h2>
+      <ul class="rules">
+        <li>You are shown a famous starting XI with the names hidden.</li>
+        <li>Type any player you recognise &mdash; order does not matter, and the pitch fills in as you go.</li>
+        <li>Surnames are enough (<em>Beckham</em>), accents are optional (<em>Pique</em> works for
+          <em>Piqu&eacute;</em>) and small typos are forgiven.</li>
+        <li>If two players in the same XI share a surname, you will be asked for a first name.</li>
+        <li><strong>Initials</strong> shows the initials of everyone still hidden.
+          <strong>Give me one</strong> hands over a player. Both cost points.</li>
+        <li>Naming all eleven before the whistle earns a completion bonus plus whatever time is left.</li>
+      </ul>
+      <button type="button" class="button button-primary" data-close>Got it</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modal-stats" hidden>
+    <div class="modal-panel card">
+      <h2>Your record</h2>
+      <dl class="stat-strip stat-strip--modal" id="modal-stats-body"></dl>
+      <div class="result-actions">
+        <button type="button" class="button button-ghost button-danger" id="reset-stats">Reset</button>
+        <button type="button" class="button button-primary" data-close>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

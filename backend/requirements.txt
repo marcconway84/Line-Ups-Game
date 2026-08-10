@@ -1,7 +1,9 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-asyncpg
-alembic
-pydantic
-python-dotenv
+fastapi>=0.110
+uvicorn[standard]>=0.27
+sqlalchemy>=2.0
+pydantic>=2.6
+# Default driver - lets the game run with no database server to set up.
+aiosqlite>=0.19
+# Postgres driver, used when DATABASE_URL points at Postgres.
+asyncpg>=0.29
+python-dotenv>=1.0

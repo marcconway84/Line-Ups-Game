@@ -1,6 +1,8 @@
 # Byte-compiled / virtual env
 venv/
+.venv/
 __pycache__/
+.pytest_cache/
 *.pyc
 .env
 .env.*
@@ -11,3 +13,4 @@ node_modules/
 
 # local DB files
 *.sqlite
+*.db
