@@ -31,8 +31,20 @@ def dataset() -> dict:
 
 @pytest_asyncio.fixture
 async def client():
-    """An HTTP client wired straight to the ASGI app, with the lifespan run."""
-    async with app.router.lifespan_context(app):
-        transport = httpx.ASGITransport(app=app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as c:
-            yield c
+    """An HTTP client wired straight to the ASGI app, with the lifespan run.
+
+    The engine is disposed afterwards. Each test runs on its own event loop, but the
+    engine is built once at import and pools its connections; a Postgres connection is
+    pinned to the loop that opened it, so without this the second test inherits a
+    connection whose loop has closed and asyncpg reports "another operation is in
+    progress". SQLite tolerates the reuse, which is why this only shows up on Postgres.
+    """
+    from backend.app.db import engine
+
+    try:
+        async with app.router.lifespan_context(app):
+            transport = httpx.ASGITransport(app=app)
+            async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as c:
+                yield c
+    finally:
+        await engine.dispose()
