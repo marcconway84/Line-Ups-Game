@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Line-Ups">
+  <rect width="512" height="512" fill="#0e2a20"/>
+  <!-- Chalk markings: halfway line, centre circle, penalty box. -->
+  <g fill="none" stroke="#eaf2ec" stroke-opacity="0.28" stroke-width="10">
+    <path d="M0 256h512"/>
+    <circle cx="256" cy="256" r="86"/>
+    <path d="M146 512V424h220v88"/>
+  </g>
+  <!-- The magnetic disc a manager pushes around the board. -->
+  <circle cx="256" cy="256" r="112" fill="#e8b04b"/>
+  <text x="256" y="256" fill="#0a1f18" font-family="Impact, 'Arial Narrow', Haettenschweiler, sans-serif"
+        font-size="132" font-weight="700" text-anchor="middle" dominant-baseline="central"
+        letter-spacing="4">XI</text>
+</svg>
