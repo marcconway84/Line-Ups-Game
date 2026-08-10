@@ -157,6 +157,19 @@ main { max-width: 720px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
 .fixture-teams { font-size: 1.3rem; font-weight: 700; }
 .fixture-teams .opponent { color: var(--text-dim); font-weight: 600; }
 .fixture-meta { color: var(--text-dim); font-size: 0.85rem; margin-top: 0.2rem; }
+.fixture-badge {
+  display: inline-block;
+  margin: 0.4rem 0.35rem 0 0;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
 .fixture-formation {
   display: inline-block;
   margin-top: 0.4rem;

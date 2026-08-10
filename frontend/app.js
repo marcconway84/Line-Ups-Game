@@ -135,21 +135,37 @@
 
   /* --------------------------------------------------------------------- game */
 
+  var MONTHS = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+
+  function longDate(iso) {
+    if (!iso) return "";
+    var bits = iso.split("-");
+    return Number(bits[2]) + " " + MONTHS[Number(bits[1]) - 1] + " " + bits[0];
+  }
+
   function renderFixture(fixture) {
     var box = $("fixture");
     box.innerHTML = "";
+    // No opponent means this is not one match but the XI a side fielded most of a
+    // season - label it, rather than leaving the fixture looking half-missing.
+    var seasonSide = !fixture.opponent;
 
     var teams = el("div", "fixture-teams");
     teams.appendChild(document.createTextNode(fixture.team || "Unknown XI"));
     if (fixture.opponent) {
-      var vs = el("span", "opponent", " vs " + fixture.opponent);
-      teams.appendChild(vs);
+      teams.appendChild(el("span", "opponent", " vs " + fixture.opponent));
     }
     box.appendChild(teams);
 
-    var bits = [fixture.competition, fixture.season].filter(Boolean);
-    if (fixture.venue) bits.push(fixture.venue);
+    var bits = [
+      fixture.competition,
+      seasonSide ? (fixture.season ? fixture.season + " season" : null) : longDate(fixture.date),
+      fixture.venue
+    ].filter(Boolean);
     box.appendChild(el("div", "fixture-meta", bits.join(" · ")));
+
+    if (seasonSide) box.appendChild(el("span", "fixture-badge", "Season XI"));
     box.appendChild(el("span", "fixture-formation", fixture.formation_label));
   }
 

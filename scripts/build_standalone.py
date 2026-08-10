@@ -242,6 +242,17 @@ h1 {
 /* Keep "4-2-3-1" and the like from breaking across lines. */
 .fixture .meta b { font-weight: 400; white-space: nowrap; }
 
+.fixture .badge {
+  display: inline-block;
+  margin-top: 0.4rem;
+  padding: 0.14rem 0.5rem;
+  border: 1px solid var(--brass);
+  color: var(--brass);
+  font: 700 0.58rem/1.4 var(--body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
 /* -------------------------------------------------------------- the board */
 .tally {
   display: grid;
@@ -825,15 +836,36 @@ SCRIPT = r"""
       LINEUPS.length + " lineups in the archive, " + years[0] + "–" + years[years.length - 1] + ".";
   }
 
+  var MONTHS = ["January","February","March","April","May","June",
+                "July","August","September","October","November","December"];
+
+  function longDate(iso) {
+    if (!iso) return "";
+    var bits = iso.split("-");
+    return Number(bits[2]) + " " + MONTHS[Number(bits[1]) - 1] + " " + bits[0];
+  }
+
+  // A lineup with no opponent is not a single match - it is the XI a side fielded
+  // most of a season. Saying so beats leaving the fixture looking half-missing.
   function paintFixture(l) {
     var box = $("fixture");
     box.innerHTML = "";
+    var seasonSide = !l.opponent;
+
     var teams = el("div", "teams");
     teams.appendChild(document.createTextNode(l.team));
     if (l.opponent) teams.appendChild(el("em", null, " v " + l.opponent));
     box.appendChild(teams);
+
+    if (seasonSide) box.appendChild(el("div", "badge", "Season XI"));
+
     var meta = el("div", "meta");
-    [l.competition, l.season, l.formation.join("-")].filter(Boolean).forEach(function (part) {
+    [
+      l.competition,
+      seasonSide ? l.season + " season" : longDate(l.date),
+      l.venue,
+      l.formation.join("-")
+    ].filter(Boolean).forEach(function (part) {
       meta.appendChild(el("b", null, part));
     });
     box.appendChild(meta);
