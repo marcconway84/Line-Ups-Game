@@ -6,9 +6,11 @@
 #
 #   mode: probe  - a handful of known players, printed for eyeballing. Costs nothing
 #                  and proves the lookup still works.
-#   mode: all    - every player in data/lineups.json, uploaded as an artifact for
-#                  review. Nothing is committed automatically: these facts end up in
-#                  a game, so a human should look before they land.
+#   mode: all    - every player in data/lineups.json.
+#
+# A full sweep pushes its result to the data/player-facts branch rather than to main.
+# These facts end up in a game, so they get read before they land: the branch can be
+# fetched and inspected, and merged only once it looks right.
 name: Look up player facts
 
 on:
@@ -21,7 +23,7 @@ on:
         default: probe
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   lookup:
@@ -47,3 +49,14 @@ jobs:
         with:
           name: player-facts
           path: data/player_facts.json
+
+      - name: Push the results to a branch for review
+        if: inputs.mode == 'all'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B data/player-facts
+          git add -f data/player_facts.json
+          git commit -m "Player facts from Wikidata, $(date -u +%Y-%m-%d)" || {
+            echo "nothing changed since the last sweep"; exit 0; }
+          git push -f origin data/player-facts
