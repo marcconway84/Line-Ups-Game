@@ -819,7 +819,7 @@ SCRIPT = r"""
     /* "Nationality", not "who he played for". The fact behind it is his footballing
        nationality, which is not the same thing: Clint Hill played 500-odd games and
        none of them for England. Labelling it as caps was simply untrue for him. */
-    { key: "nation",    label: "Nationality",             cost: 50,  blurb: "Where he played his football from." },
+    { key: "nation",    label: "Nationality",             cost: 50,  blurb: "The country he is from." },
     { key: "initials",  label: "Initials",                cost: 40,  blurb: "First letters." },
     { key: "length",    label: "Length of the surname",   cost: 25,  blurb: "How many letters." },
     { key: "letter",    label: "First letter of surname", cost: 20,  blurb: "One letter." }
