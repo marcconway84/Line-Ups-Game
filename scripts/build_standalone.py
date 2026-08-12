@@ -18,10 +18,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATASET = REPO_ROOT / "data" / "lineups.json"
+#: Optional. Produced by scripts/fetch_player_facts.py; absent until a sweep has run,
+#: in which case the sourced clues simply are not offered.
+PLAYER_FACTS = REPO_ROOT / "data" / "player_facts.json"
 DEFAULT_OUT = REPO_ROOT / "dist" / "lineups.html"
 
 TITLE = "Line-Ups &mdash; name the missing players"
@@ -731,14 +735,24 @@ SCRIPT = r"""
      a complete sheet without anyone hand-writing 220 of them. */
   var CLUES = [
     { key: "reveal",    label: "Reveal the name",         cost: 150, blurb: "Just tell me." },
+    { key: "career",    label: "Every club he played for", cost: 130, blurb: "In order." },
     { key: "elsewhere", label: "Elsewhere in the archive", cost: 100, blurb: "Another XI he starts in." },
     { key: "first",     label: "First name",              cost: 80,  blurb: "Forename only." },
     { key: "novowels",  label: "Surname, vowels hidden",  cost: 60,  blurb: "Consonants, with the gaps shown." },
+    { key: "nation",    label: "Who he played for",       cost: 50,  blurb: "His national side." },
     { key: "anagram",   label: "Anagram of the surname",  cost: 45,  blurb: "Right letters, wrong order." },
     { key: "initials",  label: "Initials",                cost: 40,  blurb: "First letters." },
     { key: "length",    label: "Length of the surname",   cost: 25,  blurb: "How many letters." },
     { key: "letter",    label: "First letter of surname", cost: 20,  blurb: "One letter." }
   ];
+
+  /* Nationality and club career come from Wikidata, looked up by
+     scripts/fetch_player_facts.py and keyed by normalised name. Unlike the rest of
+     the sheet these are not derivable from the archive, so they are offered only
+     where the lookup actually found something. */
+  var FACTS = __PLAYER_FACTS__;
+
+  function factsFor(name) { return FACTS[normalize(name)] || null; }
 
   /* ================================================================== matching
      Mirrors backend/app/matching.py. */
@@ -1228,9 +1242,12 @@ SCRIPT = r"""
     var player = game.lineup.players[slot];
     var parts = nameParts(player);
     var elsewhere = otherLineups(player.name, game.lineup.id);
+    var facts = factsFor(player.name) || {};
     return CLUES.filter(function (clue) {
       if (clue.key === "first") return !!parts.first;
       if (clue.key === "elsewhere") return elsewhere.length > 0;
+      if (clue.key === "nation") return !!facts.nationality;
+      if (clue.key === "career") return (facts.career || []).length > 1;
       return true;
     });
   }
@@ -1254,6 +1271,13 @@ SCRIPT = r"""
       var others = otherLineups(player.name, game.lineup.id);
       return "He also starts for " + describeLineup(others[0]) +
              (others.length > 1 ? " (and " + (others.length - 1) + " more in this archive)." : ".");
+    }
+    if (key === "nation") return (factsFor(player.name) || {}).nationality || "";
+    if (key === "career") {
+      var career = (factsFor(player.name) || {}).career || [];
+      // The club he is wearing today would give it away, so it is left out.
+      var here = normalize(game.lineup.team);
+      return career.filter(function (club) { return normalize(club) !== here; }).join(" → ");
     }
     return "";
   }
@@ -1533,6 +1557,7 @@ def build(fragment: bool = False) -> str:
     # </script> inside a string literal would close the block early.
     payload = json.dumps(lineups, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     script = SCRIPT.replace("__LINEUPS_DATA__", payload)
+    script = script.replace("__PLAYER_FACTS__", player_facts_payload())
 
     if fragment:
         # Artifact hosting supplies the doctype/head/body wrapper itself.
@@ -1581,6 +1606,32 @@ if ("serviceWorker" in navigator) {{
 </body>
 </html>
 """
+
+
+def player_facts_payload() -> str:
+    """Nationality and club career per player, keyed by normalised name.
+
+    Keyed on the normalised name rather than the display one so the browser can look a
+    player up with the same function it uses to match a guess. Returns an empty object
+    when no sweep has been run, which simply removes those two clues from the sheet.
+    """
+    if not PLAYER_FACTS.exists():
+        return "{}"
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from backend.app.matching import normalize
+
+    raw = json.loads(PLAYER_FACTS.read_text(encoding="utf-8"))
+    facts = {}
+    for name, entry in raw.items():
+        keep = {}
+        if entry.get("nationality"):
+            keep["nationality"] = entry["nationality"]
+        if entry.get("career"):
+            keep["career"] = entry["career"]
+        if keep:
+            facts[normalize(name)] = keep
+    return json.dumps(facts, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 
 
 def build_site(out_dir: Path) -> None:
