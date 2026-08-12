@@ -298,13 +298,37 @@ def search_among_footballers(name: str, hint: str | None) -> list[str]:
     return [row["title"] for row in payload.get("query", {}).get("search", [])]
 
 
-def find_player(name: str, trace: list | None = None, hint: str | None = None) -> dict | None:
-    """Resolve a name to a Wikidata id, rejecting anyone who is not a footballer.
+#: A starting XI in a final is not filled with children or pensioners. The window is
+#: wide on purpose - it is there to catch a different person, not to referee an
+#: unusually young debutant.
+YOUNGEST_STARTER = 15
+OLDEST_STARTER = 45
 
-    Returns None rather than a guess when nothing matches - a wrong player is far
-    worse than a missing one, because it produces a confident, wrong clue. Every
-    candidate considered is appended to `trace`, so a name that resolves to nobody
-    can be explained rather than just counted.
+
+def plausible_starter(born: int | None, match_year: int | None) -> str | None:
+    """Why this cannot be the man who started that match, or None if it could be.
+
+    The archive knows the date of every match, so the age of whoever is resolved can
+    be checked against it. That check is what separates Leonardo of Brazil 1998 from
+    the other Brazilian footballer called Leonardo who was twelve at the time - a
+    name and a nationality match both of them, and only one of them played.
+    """
+    if born is None or match_year is None:
+        return None
+    age = match_year - born
+    if age < YOUNGEST_STARTER:
+        return f"would have been {age} on the day"
+    if age > OLDEST_STARTER:
+        return f"would have been {age} on the day"
+    return None
+
+
+def candidate_players(name: str, trace: list | None = None, hint: str | None = None):
+    """Yield Wikidata ids that could be this footballer, best guess first.
+
+    Yields rather than returns because being a footballer of the right name is not
+    enough - the caller checks each one's age against the match before accepting it,
+    and needs to be able to ask for the next.
     """
     payload = _get(
         WIKIDATA_API,
@@ -324,8 +348,8 @@ def find_player(name: str, trace: list | None = None, hint: str | None = None) -
         qid = hit["id"]
         claims = footballer_claims(qid)
         if is_footballer(claims):
-            return {"qid": qid, "label": hit.get("label"), "description": hit.get("description")}
-        if trace is not None:
+            yield {"qid": qid, "label": hit.get("label"), "description": hit.get("description")}
+        elif trace is not None:
             trace.append(f"{qid} ({hit.get('description') or 'no description'}) - not a footballer")
 
     # Nothing in the name search was a footballer. Try again among footballers only,
@@ -339,8 +363,7 @@ def find_player(name: str, trace: list | None = None, hint: str | None = None) -
                 trace.append(f"{qid} - a footballer, but does not go by '{name}'")
             continue
         if is_footballer(footballer_claims(qid)):
-            return {"qid": qid, "label": name, "description": f"found via {hint or 'search'}"}
-    return None
+            yield {"qid": qid, "label": name, "description": f"found via {hint or 'search'}"}
 
 
 def ids_for(claims: dict, prop: str) -> set:
@@ -447,23 +470,25 @@ def club_is_new_or_earlier(clubs: dict, label: str, start: str | None) -> bool:
 
 
 def dataset_names() -> list[str]:
-    return [name for name, _ in dataset_entries()]
+    return [name for name, _, _ in dataset_entries()]
 
 
-def dataset_entries() -> list[tuple[str, str]]:
-    """Every player, paired with the side he lines up for.
+def dataset_entries() -> list[tuple[str, str, int | None]]:
+    """Every player, with the side he lines up for and the year he did it.
 
-    The club is only used to break ties when a name alone will not do it - which is
-    the difference between finding Wilson Piazza and finding a square in Rome.
+    The side breaks ties a name alone cannot - the difference between finding Wilson
+    Piazza and finding a square in Rome. The year is the stronger check of the two:
+    whoever is resolved has to have been the right age on the day.
     """
     doc = json.loads(DATASET.read_text(encoding="utf-8"))
     seen: set[str] = set()
-    entries: list[tuple[str, str]] = []
+    entries: list[tuple[str, str, int | None]] = []
     for lineup in doc["lineups"]:
+        year = _year(lineup.get("date"))
         for player in lineup["players"]:
             if player["name"] not in seen:
                 seen.add(player["name"])
-                entries.append((player["name"], lineup["team"]))
+                entries.append((player["name"], lineup["team"], year))
     return entries
 
 
@@ -478,20 +503,33 @@ PROBE_NAMES = [
 
 
 def run(names: list[str], pause: float = 0.4) -> dict:
-    hints = dict(dataset_entries())
+    context = {name: (team, year) for name, team, year in dataset_entries()}
     out: dict[str, dict] = {}
     for name in names:
         try:
             trace: list[str] = []
-            found = find_player(name, trace, hints.get(name))
-            if not found:
+            team, match_year = context.get(name, (None, None))
+            resolved = None
+            for found in candidate_players(name, trace, team):
+                facts = player_facts(found["qid"])
+                # Being a footballer of the right name is not enough. Check the man
+                # against the match: if he was twelve that year, he is not the one.
+                wrong = plausible_starter(facts.get("born"), match_year)
+                if wrong:
+                    trace.append(f"{found['qid']} - born {facts.get('born')}, {wrong}")
+                    continue
+                resolved = (found, facts)
+                break
+
+            if not resolved:
                 # Say which entities were looked at and why each was turned down. A bare
                 # "NOT FOUND" cannot be told apart from a bug, and once was one.
                 print(f"  {name:<26} NOT FOUND after {len(trace)} candidates")
                 for line in trace[:5]:
                     print(f"      {line}")
                 continue
-            facts = player_facts(found["qid"])
+
+            found, facts = resolved
             out[name] = {**facts, "wikidata_id": found["qid"]}
             career = ", ".join(facts["career"][:5]) + ("…" if len(facts["career"]) > 5 else "")
             print(f"  {name:<26} {found['qid']:<10} {str(facts['nationality']):<20} {career}")

@@ -350,13 +350,13 @@ class TestResolvingAName:
 
         monkeypatch.setattr(fetch, "_get", fake_get)
         trace = []
-        assert fetch.find_player("Someone Else", trace) is None
+        assert list(fetch.candidate_players("Someone Else", trace)) == []
         assert any("Q1" in line and "a singer" in line for line in trace)
 
     def test_a_search_with_no_hits_says_so(self, monkeypatch):
         monkeypatch.setattr(fetch, "_get", lambda url, params, **kw: {"search": []})
         trace = []
-        assert fetch.find_player("Nobody At All", trace) is None
+        assert list(fetch.candidate_players("Nobody At All", trace)) == []
         assert trace == ["search returned nothing"]
 
 
@@ -451,7 +451,7 @@ class TestSingleNamePlayers:
 
         monkeypatch.setattr(fetch, "_get", fake_get)
         trace = []
-        assert fetch.find_player("Gabi", trace, "Atletico Madrid") is None
+        assert list(fetch.candidate_players("Gabi", trace, "Atletico Madrid")) == []
         assert any("does not go by 'Gabi'" in line for line in trace)
 
     def test_a_matching_alias_is_accepted(self, monkeypatch):
@@ -473,14 +473,48 @@ class TestSingleNamePlayers:
             return {"claims": {"P106": [_occupation(fetch.ASSOCIATION_FOOTBALLER)]}}
 
         monkeypatch.setattr(fetch, "_get", fake_get)
-        found = fetch.find_player("Xavi", [], "Barcelona")
+        found = next(fetch.candidate_players("Xavi", [], "Barcelona"), None)
         assert found and found["qid"] == "Q41473"
 
     def test_accents_do_not_stop_a_match(self):
         assert fetch.fold("Félix") == fetch.fold("Felix")
         assert fetch.fold("  Piazza ") == "piazza"
 
-    def test_every_player_is_paired_with_a_side(self):
+    def test_every_player_is_paired_with_a_side_and_a_year(self):
         entries = fetch.dataset_entries()
         assert len(entries) == len(fetch.dataset_names())
-        assert all(name and team for name, team in entries)
+        assert all(name and team for name, team, _ in entries)
+        # Every lineup is a specific match, so every player has a year to be checked
+        # against. Without one the age test would quietly do nothing.
+        assert all(year and 1870 < year < 2100 for _, _, year in entries)
+
+
+class TestAgeOnTheDay:
+    """A name and a nationality match more than one person; an age matches fewer.
+
+    The first sweep to reach the single-name players resolved Brazil's Leonardo to a
+    different Brazilian footballer of the same name who was twelve in 1998. Nothing
+    about the name, the sport or the country ruled him out - only the date could.
+    """
+
+    def test_a_child_could_not_have_started(self):
+        assert "12" in fetch.plausible_starter(1986, 1998)
+
+    def test_a_pensioner_could_not_have_started(self):
+        assert fetch.plausible_starter(1900, 1998) is not None
+
+    def test_the_right_man_passes(self):
+        assert fetch.plausible_starter(1969, 1998) is None
+
+    def test_a_veteran_is_not_thrown_out(self):
+        # Dino Zoff was 40 in the 1982 final; the window has to allow for that.
+        assert fetch.plausible_starter(1942, 1982) is None
+
+    def test_a_teenager_is_not_thrown_out(self):
+        # Pele was 17 in 1958. A tighter floor would have discarded him.
+        assert fetch.plausible_starter(1940, 1958) is None
+
+    def test_nothing_to_check_against_is_not_a_rejection(self):
+        # A missing birth year or an undated match must not silently drop a player.
+        assert fetch.plausible_starter(None, 1998) is None
+        assert fetch.plausible_starter(1969, None) is None
