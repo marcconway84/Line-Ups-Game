@@ -1008,33 +1008,21 @@ SCRIPT = r"""
     return Number(bits[2]) + " " + MONTHS[Number(bits[1]) - 1] + " " + bits[0];
   }
 
-  // A lineup with no opponent is not a single match - it is the XI a side fielded
-  // most of a season. Saying so beats leaving the fixture looking half-missing.
+  // Every lineup is one specific match - the dataset validator enforces it - so the
+  // header can always name the opponent, the ground and the date.
   function paintFixture(l) {
     var box = $("fixture");
     box.innerHTML = "";
-    var seasonSide = !l.opponent;
 
     var teams = el("div", "teams");
     teams.appendChild(document.createTextNode(l.team));
-    if (l.opponent) teams.appendChild(el("em", null, " v " + l.opponent));
+    teams.appendChild(el("em", null, " v " + l.opponent));
     box.appendChild(teams);
 
-    // Say it in words rather than with a label. "Season XI" is jargon, and a player
-    // looking at Arsenal 2003-04 is entitled to ask which match this is - the answer
-    // being that it is not one.
-    if (seasonSide) {
-      box.appendChild(el("div", "seasonnote",
-        "Not one match — the XI they fielded most in " + l.season));
-    }
-
     var meta = el("div", "meta");
-    [
-      l.competition,
-      seasonSide ? null : longDate(l.date),
-      l.venue,
-      l.formation.join("-")
-    ].filter(Boolean).forEach(function (part) { meta.appendChild(el("b", null, part)); });
+    [l.competition, longDate(l.date), l.venue, l.formation.join("-")]
+      .filter(Boolean)
+      .forEach(function (part) { meta.appendChild(el("b", null, part)); });
     box.appendChild(meta);
   }
 

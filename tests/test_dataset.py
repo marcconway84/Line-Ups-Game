@@ -46,6 +46,29 @@ def test_dates_are_real_and_ordered_sensibly(dataset):
         assert date(1950, 1, 1) < parsed <= date.today(), lineup["id"]
 
 
+def test_every_lineup_is_one_specific_match(dataset):
+    """The point of the game is a particular team sheet on a particular night.
+
+    A "most-used XI of the season" is not something a player can picture, so an
+    opponent and a date are required of every entry.
+    """
+    for lineup in dataset["lineups"]:
+        assert lineup.get("opponent"), f"{lineup['id']} has no opponent"
+        assert lineup.get("date"), f"{lineup['id']} has no date"
+        assert lineup.get("venue"), f"{lineup['id']} has no venue"
+
+
+def test_a_lineup_without_an_opponent_is_rejected(dataset):
+    """The validator must catch it, not just the curator."""
+    from copy import deepcopy
+
+    broken = deepcopy(dataset)
+    broken["lineups"] = [deepcopy(dataset["lineups"][0])]
+    broken["lineups"][0]["opponent"] = None
+    problems = validate_dataset(broken)
+    assert any("opponent" in problem for problem in problems)
+
+
 def test_sources_are_links(dataset):
     for lineup in dataset["lineups"]:
         assert lineup["source_url"].startswith("https://"), lineup["id"]

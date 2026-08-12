@@ -473,164 +473,6 @@
       ]
     },
     {
-      "id": "pl-2004-arsenal-invincibles",
-      "team": "Arsenal",
-      "opponent": null,
-      "score": null,
-      "competition": "Premier League",
-      "season": "2003-04",
-      "date": "2004-05-15",
-      "venue": "Highbury, London",
-      "formation": [
-        4,
-        4,
-        2
-      ],
-      "tags": [
-        "club",
-        "england",
-        "2000s"
-      ],
-      "blurb": "Arsenal's signature XI from the only 38-game unbeaten league season in English top-flight history. Not a single match lineup - this is the side's most familiar first choice.",
-      "source_url": "https://en.wikipedia.org/wiki/Arsenal_F.C._Invincibles",
-      "players": [
-        {
-          "name": "Jens Lehmann",
-          "pos": "GK"
-        },
-        {
-          "name": "Ashley Cole",
-          "pos": "LB"
-        },
-        {
-          "name": "Sol Campbell",
-          "pos": "CB",
-          "accepts": [
-            "sulzeer campbell"
-          ]
-        },
-        {
-          "name": "Kolo Touré",
-          "pos": "CB",
-          "accepts": [
-            "kolo"
-          ]
-        },
-        {
-          "name": "Lauren",
-          "pos": "RB",
-          "accepts": [
-            "lauren etame mayer"
-          ]
-        },
-        {
-          "name": "Robert Pirès",
-          "pos": "LM"
-        },
-        {
-          "name": "Patrick Vieira",
-          "pos": "CM"
-        },
-        {
-          "name": "Gilberto Silva",
-          "pos": "CM",
-          "accepts": [
-            "gilberto"
-          ]
-        },
-        {
-          "name": "Freddie Ljungberg",
-          "pos": "RM",
-          "accepts": [
-            "fredrik ljungberg"
-          ]
-        },
-        {
-          "name": "Dennis Bergkamp",
-          "pos": "ST"
-        },
-        {
-          "name": "Thierry Henry",
-          "pos": "ST",
-          "accepts": [
-            "titi"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "pl-2016-leicester",
-      "team": "Leicester City",
-      "opponent": null,
-      "score": null,
-      "competition": "Premier League",
-      "season": "2015-16",
-      "date": "2016-05-02",
-      "venue": "King Power Stadium, Leicester",
-      "formation": [
-        4,
-        4,
-        2
-      ],
-      "tags": [
-        "club",
-        "england",
-        "2010s"
-      ],
-      "blurb": "5000-1 outsiders at the start of the season. This XI started the majority of the campaign almost unchanged.",
-      "source_url": "https://en.wikipedia.org/wiki/2015%E2%80%9316_Leicester_City_F.C._season",
-      "players": [
-        {
-          "name": "Kasper Schmeichel",
-          "pos": "GK"
-        },
-        {
-          "name": "Christian Fuchs",
-          "pos": "LB"
-        },
-        {
-          "name": "Wes Morgan",
-          "pos": "CB"
-        },
-        {
-          "name": "Robert Huth",
-          "pos": "CB"
-        },
-        {
-          "name": "Danny Simpson",
-          "pos": "RB"
-        },
-        {
-          "name": "Marc Albrighton",
-          "pos": "LM"
-        },
-        {
-          "name": "Danny Drinkwater",
-          "pos": "CM"
-        },
-        {
-          "name": "N'Golo Kanté",
-          "pos": "CM",
-          "accepts": [
-            "ngolo",
-            "kante"
-          ]
-        },
-        {
-          "name": "Riyad Mahrez",
-          "pos": "RM"
-        },
-        {
-          "name": "Shinji Okazaki",
-          "pos": "ST"
-        },
-        {
-          "name": "Jamie Vardy",
-          "pos": "ST"
-        }
-      ]
-    },
-    {
       "id": "ucl-2012-final-chelsea",
       "team": "Chelsea",
       "opponent": "Bayern Munich",
@@ -2555,102 +2397,6 @@
       ]
     },
     {
-      "id": "pl-2020-liverpool",
-      "team": "Liverpool",
-      "opponent": null,
-      "score": null,
-      "competition": "Premier League",
-      "season": "2019-20",
-      "date": "2020-06-25",
-      "venue": "Anfield, Liverpool",
-      "formation": [
-        4,
-        3,
-        3
-      ],
-      "tags": [
-        "club",
-        "england",
-        "2020s"
-      ],
-      "blurb": "A first league title in thirty years, wrapped up with seven games to spare.",
-      "source_url": "https://en.wikipedia.org/wiki/2019%E2%80%9320_Liverpool_F.C._season",
-      "players": [
-        {
-          "name": "Alisson",
-          "pos": "GK",
-          "accepts": [
-            "alisson becker",
-            "becker"
-          ]
-        },
-        {
-          "name": "Andrew Robertson",
-          "pos": "LB",
-          "accepts": [
-            "andy robertson",
-            "robbo"
-          ]
-        },
-        {
-          "name": "Virgil van Dijk",
-          "pos": "CB",
-          "accepts": [
-            "vvd",
-            "vandijk"
-          ]
-        },
-        {
-          "name": "Joe Gomez",
-          "pos": "CB"
-        },
-        {
-          "name": "Trent Alexander-Arnold",
-          "pos": "RB",
-          "accepts": [
-            "trent",
-            "taa"
-          ]
-        },
-        {
-          "name": "Georginio Wijnaldum",
-          "pos": "CM",
-          "accepts": [
-            "gini"
-          ]
-        },
-        {
-          "name": "Fabinho",
-          "pos": "CM"
-        },
-        {
-          "name": "Jordan Henderson",
-          "pos": "CM",
-          "accepts": [
-            "hendo"
-          ]
-        },
-        {
-          "name": "Sadio Mané",
-          "pos": "LW"
-        },
-        {
-          "name": "Roberto Firmino",
-          "pos": "CF",
-          "accepts": [
-            "bobby firmino"
-          ]
-        },
-        {
-          "name": "Mohamed Salah",
-          "pos": "RW",
-          "accepts": [
-            "mo salah"
-          ]
-        }
-      ]
-    },
-    {
       "id": "euro-2012-final-spain",
       "team": "Spain",
       "opponent": "Italy",
@@ -3082,6 +2828,304 @@
         {
           "name": "Gareth Bale",
           "pos": "RW"
+        }
+      ]
+    },
+    {
+      "id": "pl-2012-mancity-qpr",
+      "team": "Manchester City",
+      "opponent": "Queens Park Rangers",
+      "score": "3-2",
+      "competition": "Premier League",
+      "season": "2011-12",
+      "date": "2012-05-13",
+      "venue": "Etihad Stadium, Manchester",
+      "formation": [
+        4,
+        4,
+        2
+      ],
+      "tags": [
+        "club",
+        "england",
+        "2010s"
+      ],
+      "blurb": "Agüerooooo. City needed to win to take the title on goal difference and were losing 2-1 with two minutes of normal time left.",
+      "source_url": "https://en.wikipedia.org/wiki/2011%E2%80%9312_Premier_League",
+      "players": [
+        {
+          "name": "Joe Hart",
+          "pos": "GK"
+        },
+        {
+          "name": "Gaël Clichy",
+          "pos": "LB"
+        },
+        {
+          "name": "Joleon Lescott",
+          "pos": "CB"
+        },
+        {
+          "name": "Vincent Kompany",
+          "pos": "CB"
+        },
+        {
+          "name": "Pablo Zabaleta",
+          "pos": "RB"
+        },
+        {
+          "name": "David Silva",
+          "pos": "LM"
+        },
+        {
+          "name": "Gareth Barry",
+          "pos": "CM"
+        },
+        {
+          "name": "Yaya Touré",
+          "pos": "CM",
+          "accepts": [
+            "yaya"
+          ]
+        },
+        {
+          "name": "Samir Nasri",
+          "pos": "RM"
+        },
+        {
+          "name": "Carlos Tevez",
+          "pos": "ST",
+          "accepts": [
+            "carlitos"
+          ]
+        },
+        {
+          "name": "Sergio Agüero",
+          "pos": "ST",
+          "accepts": [
+            "kun aguero",
+            "kun"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pl-2016-leicester-everton",
+      "team": "Leicester City",
+      "opponent": "Everton",
+      "score": "3-1",
+      "competition": "Premier League",
+      "season": "2015-16",
+      "date": "2016-05-07",
+      "venue": "King Power Stadium, Leicester",
+      "formation": [
+        4,
+        4,
+        2
+      ],
+      "tags": [
+        "club",
+        "england",
+        "2010s"
+      ],
+      "blurb": "Trophy day. 5000-1 outsiders at the start of the season, champions with a game to spare.",
+      "source_url": "https://en.wikipedia.org/wiki/2015%E2%80%9316_Leicester_City_F.C._season",
+      "players": [
+        {
+          "name": "Kasper Schmeichel",
+          "pos": "GK"
+        },
+        {
+          "name": "Christian Fuchs",
+          "pos": "LB"
+        },
+        {
+          "name": "Wes Morgan",
+          "pos": "CB"
+        },
+        {
+          "name": "Robert Huth",
+          "pos": "CB"
+        },
+        {
+          "name": "Danny Simpson",
+          "pos": "RB"
+        },
+        {
+          "name": "Marc Albrighton",
+          "pos": "LM"
+        },
+        {
+          "name": "Danny Drinkwater",
+          "pos": "CM"
+        },
+        {
+          "name": "N'Golo Kanté",
+          "pos": "CM"
+        },
+        {
+          "name": "Riyad Mahrez",
+          "pos": "RM"
+        },
+        {
+          "name": "Shinji Okazaki",
+          "pos": "ST"
+        },
+        {
+          "name": "Jamie Vardy",
+          "pos": "ST"
+        }
+      ]
+    },
+    {
+      "id": "wc-2014-semi-brazil",
+      "team": "Brazil",
+      "opponent": "Germany",
+      "score": "1-7",
+      "competition": "FIFA World Cup Semi-Final",
+      "season": "2014",
+      "date": "2014-07-08",
+      "venue": "Estádio Mineirão, Belo Horizonte",
+      "formation": [
+        4,
+        2,
+        3,
+        1
+      ],
+      "tags": [
+        "international",
+        "2010s"
+      ],
+      "blurb": "The Mineirazo. Without the injured Neymar and the suspended Thiago Silva, Brazil conceded five in eighteen minutes.",
+      "source_url": "https://en.wikipedia.org/wiki/Brazil_v_Germany_(2014_FIFA_World_Cup)",
+      "players": [
+        {
+          "name": "Júlio César",
+          "pos": "GK"
+        },
+        {
+          "name": "Marcelo",
+          "pos": "LB"
+        },
+        {
+          "name": "David Luiz",
+          "pos": "CB"
+        },
+        {
+          "name": "Dante",
+          "pos": "CB"
+        },
+        {
+          "name": "Maicon",
+          "pos": "RB"
+        },
+        {
+          "name": "Luiz Gustavo",
+          "pos": "CDM"
+        },
+        {
+          "name": "Fernandinho",
+          "pos": "CDM"
+        },
+        {
+          "name": "Bernard",
+          "pos": "LM"
+        },
+        {
+          "name": "Oscar",
+          "pos": "AM"
+        },
+        {
+          "name": "Hulk",
+          "pos": "RM"
+        },
+        {
+          "name": "Fred",
+          "pos": "ST"
+        }
+      ]
+    },
+    {
+      "id": "ucl-2003-final-milan",
+      "team": "AC Milan",
+      "opponent": "Juventus",
+      "score": "0-0 (3-2 pens)",
+      "competition": "UEFA Champions League Final",
+      "season": "2002-03",
+      "date": "2003-05-28",
+      "venue": "Old Trafford, Manchester",
+      "formation": [
+        4,
+        3,
+        1,
+        2
+      ],
+      "tags": [
+        "club",
+        "europe",
+        "2000s"
+      ],
+      "blurb": "The first all-Italian final, goalless across 120 minutes and settled by Shevchenko's penalty.",
+      "source_url": "https://en.wikipedia.org/wiki/2003_UEFA_Champions_League_final",
+      "players": [
+        {
+          "name": "Dida",
+          "pos": "GK",
+          "accepts": [
+            "nelson dida"
+          ]
+        },
+        {
+          "name": "Kakha Kaladze",
+          "pos": "LB"
+        },
+        {
+          "name": "Paolo Maldini",
+          "pos": "CB"
+        },
+        {
+          "name": "Alessandro Nesta",
+          "pos": "CB"
+        },
+        {
+          "name": "Alessandro Costacurta",
+          "pos": "RB"
+        },
+        {
+          "name": "Clarence Seedorf",
+          "pos": "CM"
+        },
+        {
+          "name": "Andrea Pirlo",
+          "pos": "CM"
+        },
+        {
+          "name": "Gennaro Gattuso",
+          "pos": "CM",
+          "accepts": [
+            "rino gattuso"
+          ]
+        },
+        {
+          "name": "Manuel Rui Costa",
+          "pos": "AM",
+          "accepts": [
+            "rui costa"
+          ]
+        },
+        {
+          "name": "Filippo Inzaghi",
+          "pos": "ST",
+          "accepts": [
+            "pippo inzaghi"
+          ]
+        },
+        {
+          "name": "Andriy Shevchenko",
+          "pos": "ST",
+          "accepts": [
+            "sheva"
+          ]
         }
       ]
     }

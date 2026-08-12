@@ -44,9 +44,12 @@ def validate_dataset(dataset: dict) -> list[str]:
         if sum(formation) != 10:
             problems.append(f"{lineup_id}: formation {formation} does not add up to 10")
 
-        for field in ("team", "competition", "date", "source_url"):
+        # Every entry must be one identifiable match. A "most-used XI" of a season is
+        # not something a player can picture, and knowing which night it was is half
+        # the game - so an opponent and a date are required, not optional.
+        for field in ("team", "opponent", "competition", "date", "source_url"):
             if not entry.get(field):
-                problems.append(f"{lineup_id}: missing '{field}'")
+                problems.append(f"{lineup_id}: missing '{field}' - every lineup must be a specific match")
 
         names = [normalize(p.get("name", "")) for p in players]
         if "" in names:
