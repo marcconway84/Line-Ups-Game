@@ -551,15 +551,26 @@ button.man:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px;
   color: var(--pitch-line, var(--chalk)); font: inherit; text-decoration: underline;
 }
 .build { margin: 0.6rem 0 0; font-size: 0.62rem; color: var(--chalk-dim); opacity: 0.7; }
-.board { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
-.board td { padding: 0.28rem 0; border-bottom: var(--rule); color: var(--chalk-dim); }
-.board td.rank { width: 2.2rem; font-family: var(--data); }
-.board td.tally {
-  text-align: right; color: var(--chalk);
+/* Named "standings", not "board": .board is already the pitch, and the leaderboard
+   table quietly inherited its container-query sizing - 120px-tall rows with the
+   names scattered across them. */
+.standings { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
+/* Cells are styled by position rather than by class. Three class names in a row -
+   board, tally, points - turned out to already mean the pitch, the stats strip and
+   the big score readout, and the table silently inherited all three. Position
+   cannot collide with anything. */
+.standings td {
+  padding: 0.32rem 0; border-bottom: var(--rule); color: var(--chalk-dim);
+  font-size: 0.76rem; font-weight: 400; line-height: 1.3;
+}
+.standings td:first-child { width: 2.6rem; font-family: var(--data); white-space: nowrap; }
+.standings td:last-child {
+  text-align: right; color: var(--chalk); width: 4.5rem;
   font-family: var(--data); font-variant-numeric: tabular-nums;
 }
-.board tr.you td { color: var(--chalk); font-weight: 700; }
-.board tr.you td.rank::after { content: " \2190"; }
+/* Your own row: bold, on a lighter band. Not an arrow - the display font has no
+   glyph for one, so it came out as an empty box. */
+.standings tr.you td { color: var(--chalk); font-weight: 700; background: rgba(255, 255, 255, 0.06); }
 #name-input {
   width: 100%; padding: 0.5rem 0.6rem; font: inherit; color: var(--chalk);
   background: rgba(0, 0, 0, 0.25); border: var(--rule); border-radius: 0.4rem;
@@ -742,7 +753,7 @@ MARKUP = """
 <dialog id="dlg-board">
   <h2 id="board-title">Leaderboard</h2>
   <p class="clue-sub" id="board-sub"></p>
-  <table class="board" id="board-table"></table>
+  <table class="standings" id="board-table"></table>
   <button class="btn" type="button" data-close>Close</button>
 </dialog>
 
@@ -1251,24 +1262,16 @@ SCRIPT = r"""
       if (data.you && data.you.name === row.name && data.you.score === row.score) {
         tr.className = "you";
       }
-      var rank = tr.insertCell();
-      rank.className = "rank";
-      rank.textContent = ordinal(place);
+      tr.insertCell().textContent = ordinal(place);
       tr.insertCell().textContent = row.name;
-      var tally = tr.insertCell();
-      tally.className = "tally";
-      tally.textContent = String(row.score);
+      tr.insertCell().textContent = String(row.score);
     });
     if (data.you && data.you.rank > shown) {
       var mine = table.insertRow();
       mine.className = "you";
-      var r = mine.insertCell();
-      r.className = "rank";
-      r.textContent = ordinal(data.you.rank);
+      mine.insertCell().textContent = ordinal(data.you.rank);
       mine.insertCell().textContent = data.you.name;
-      var t = mine.insertCell();
-      t.className = "tally";
-      t.textContent = String(data.you.score);
+      mine.insertCell().textContent = String(data.you.score);
     }
   }
 
@@ -1782,6 +1785,10 @@ SCRIPT = r"""
 
   function goHome() { stopClock(); paintHome(); show("home"); }
 
+  /* Exposed so tests/test_board_layout.py can paint a board and measure it. The
+     leaderboard's cells once inherited the pitch's layout without erroring, and a
+     browser is the only thing that can see that. */
+  window.__paint = paintBoardTable;
   $("build-stamp").textContent = "Build " + BUILD;
   $("go-quick").addEventListener("click", startQuick);
   $("go-again").addEventListener("click", startQuick);
