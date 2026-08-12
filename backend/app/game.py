@@ -106,6 +106,82 @@ def daily_index(day: date, total: int) -> int:
     return int(digest, 16) % total
 
 
+#: Clues a player can buy about one team-mate, dearest first. Price tracks how much
+#: each gives away. Every one is computed from the archive rather than recalled, so
+#: they are exact by construction and exist for every player without hand-authoring.
+CLUE_COSTS = {
+    "reveal": 150,
+    "elsewhere": 100,
+    "first": 80,
+    "novowels": 60,
+    "anagram": 45,
+    "initials": 40,
+    "length": 25,
+    "letter": 20,
+}
+
+VOWELS = frozenset("aeiou")
+
+
+def surname_letters(name: str) -> str:
+    """The surname reduced to bare letters - the basis of the letter clues."""
+    from .matching import surname_of
+
+    return "".join(ch for ch in surname_of(name) if ch.isalpha())
+
+
+def forename(name: str) -> str | None:
+    """The forename, or None for a player who goes by a single name (Xavi, Pelé)."""
+    parts = str(name).strip().split()
+    return parts[0] if len(parts) > 1 else None
+
+
+def mask_vowels(name: str) -> str:
+    """"Schmeichel" -> "SCH·M·CH·L": consonants kept, vowels shown as gaps."""
+    return "".join("·" if ch in VOWELS else ch.upper() for ch in surname_letters(name))
+
+
+def anagram_of(name: str) -> str:
+    """A deterministic scramble of the surname that is never the surname itself."""
+    letters = list(surname_letters(name).upper())
+    if len(letters) < 3:
+        return " ".join(letters)
+    original = "".join(letters)
+    seed = int(hashlib.sha256(original.encode("utf-8")).hexdigest(), 16)
+    for _ in range(8):
+        # Fisher-Yates driven by the seed, so the same name always scrambles alike.
+        for i in range(len(letters) - 1, 0, -1):
+            seed = (seed * 6364136223846793005 + 1442695040888963407) % (2**64)
+            j = seed % (i + 1)
+            letters[i], letters[j] = letters[j], letters[i]
+        if "".join(letters) != original:
+            break
+    return " ".join(letters)
+
+
+def clue_length(name: str) -> str:
+    count = len(surname_letters(name))
+    tail = ", not counting the forename." if forename(name) else ", and he goes by one name only."
+    return f"{count} letters{tail}"
+
+
+def available_clues(name: str, also_appears: int = 0) -> list[str]:
+    """Clue keys worth offering for this player, dearest first.
+
+    A forename clue is pointless for a single-name player, and "elsewhere" is only
+    honest when he really does start in another XI.
+    """
+    order = sorted(CLUE_COSTS, key=lambda key: -CLUE_COSTS[key])
+    out = []
+    for key in order:
+        if key == "first" and not forename(name):
+            continue
+        if key == "elsewhere" and also_appears <= 0:
+            continue
+        out.append(key)
+    return out
+
+
 @dataclass(frozen=True)
 class ScoreBreakdown:
     guessed: int

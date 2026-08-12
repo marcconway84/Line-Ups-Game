@@ -46,8 +46,16 @@ export DATABASE_URL=postgresql://user:pass@localhost:5432/lineups_db
 - **Difficulty.** Easy shows 4 players at kick-off and gives you 4 minutes; medium shows
   2 in 3 minutes; hard shows nothing in 2:30 and pays double. The goalkeeper is never
   given away.
-- **Hints.** *Initials* shows the initials of everyone still hidden (−40). *Give me one*
-  hands over a player (−120). Hinted players earn no points.
+- **Clues.** Stuck on one player? Tap his shirt for a clue sheet of his own, priced by how
+  much each clue gives away: the name itself (−150), another XI in the archive he also
+  starts in (−100), his forename (−80), the surname with its vowels blanked out (−60), an
+  anagram of the surname (−45), his initials (−40), the length of the surname (−25), its
+  first letter (−20). Hinted players earn no points.
+
+  Every clue is **computed from the archive**, never recalled — an anagram is generated, a
+  repeat appearance is looked up. So they are exact by construction, they exist for all 220
+  players without anyone hand-writing them, and they cannot quietly rot. `tests/test_clues.py`
+  checks each one against every player in the dataset.
 - **Scoring.** 100 per player you name, multiplied by the difficulty, plus a completion
   bonus and whatever time is left if you get all eleven.
 - **Daily challenge.** One lineup a day, the same puzzle and the same free players for

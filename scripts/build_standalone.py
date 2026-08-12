@@ -679,9 +679,9 @@ MARKUP = """
     <li>Surnames are enough (<strong>Beckham</strong>). Accents are optional &mdash; <strong>Pique</strong> finds Piqu&eacute;.</li>
     <li>Small typos are forgiven on longer names.</li>
     <li>If two players in the same XI share a surname, you'll be asked for a first name.</li>
-    <li><strong>Stuck on one player? Tap him.</strong> Each shirt has its own clue sheet &mdash; a cryptic
-      hint, a niche fact, his nationality, a previous club, his international record, or the lot.
-      The more a clue gives away, the more it costs.</li>
+    <li><strong>Stuck on one player? Tap him.</strong> Every shirt has its own clue sheet &mdash;
+      an anagram of the surname, its length, the vowels blanked out, his forename, or another XI
+      in the archive he also starts in. The more a clue gives away, the more it costs.</li>
     <li>Get all eleven before the whistle for a bonus, plus whatever time is left.</li>
   </ul>
   <button class="btn" type="button" data-close>Close</button>
@@ -727,20 +727,22 @@ SCRIPT = r"""
   var PER_PLAYER = 100, FINISH_BONUS = 250, PER_SECOND = 5;
 
   /* Clues are bought per player, listed most expensive first. Price tracks how
-     much a clue gives away: a cryptic hint is cheap and oblique, a full career
-     history all but names the man. `key` is the field in the dataset; the two
-     without one are derived from the name itself and so exist for every player. */
+     much a clue gives away: one letter is cheap, the name itself is dear.
+
+     Every clue here is *computed* from the lineup data - the player's name, and
+     which other XIs in the archive he starts in. Nothing is recalled from
+     memory, so nothing can be subtly wrong, and every player in the archive has
+     a complete sheet without anyone hand-writing 220 of them. */
   var CLUES = [
-    { key: "reveal",  label: "Reveal the name",     cost: 150, blurb: "Just tell me." },
-    { key: "career",  label: "Full career history", cost: 120, blurb: "Every club, in order." },
-    { key: "club",    label: "A previous club",     cost: 75,  blurb: "Not the one he is best known for." },
-    { key: "caps",    label: "International record", cost: 60, blurb: "Caps and goals." },
-    { key: "nation",  label: "Nationality",         cost: 45,  blurb: "Who he played for." },
-    { key: "initials", label: "Initials",           cost: 40,  blurb: "First letters." },
-    { key: "trivia",  label: "Niche fact",          cost: 35,  blurb: "One for the anoraks." },
-    { key: "cryptic", label: "Cryptic clue",        cost: 25,  blurb: "Work for it." }
+    { key: "reveal",    label: "Reveal the name",         cost: 150, blurb: "Just tell me." },
+    { key: "elsewhere", label: "Elsewhere in the archive", cost: 100, blurb: "Another XI he starts in." },
+    { key: "first",     label: "First name",              cost: 80,  blurb: "Forename only." },
+    { key: "novowels",  label: "Surname, vowels hidden",  cost: 60,  blurb: "Consonants, with the gaps shown." },
+    { key: "anagram",   label: "Anagram of the surname",  cost: 45,  blurb: "Right letters, wrong order." },
+    { key: "initials",  label: "Initials",                cost: 40,  blurb: "First letters." },
+    { key: "length",    label: "Length of the surname",   cost: 25,  blurb: "How many letters." },
+    { key: "letter",    label: "First letter of surname", cost: 20,  blurb: "One letter." }
   ];
-  var DERIVED = { reveal: 1, initials: 1 };   // available for every player
 
   /* ================================================================== matching
      Mirrors backend/app/matching.py. */
@@ -1185,22 +1187,85 @@ SCRIPT = r"""
 
   function boughtFor(slot) { return game.bought[slot] || (game.bought[slot] = {}); }
 
-  // Which clues this player can offer: the two derived ones always, plus whatever
-  // the dataset actually holds. A clue with no data is not offered rather than
-  // sold and then found to be empty.
+  /* Which other XIs in the archive a player also starts in. Built once, by name,
+     so "elsewhere" is a fact about the data rather than a claim about football. */
+  var APPEARANCES = (function () {
+    var index = {};
+    LINEUPS.forEach(function (lineup, lineupIndex) {
+      lineup.players.forEach(function (player) {
+        var key = normalize(player.name);
+        (index[key] || (index[key] = [])).push(lineupIndex);
+      });
+    });
+    return index;
+  })();
+
+  function otherLineups(name, currentId) {
+    return (APPEARANCES[normalize(name)] || [])
+      .map(function (i) { return LINEUPS[i]; })
+      .filter(function (l) { return l.id !== currentId; });
+  }
+
+  function describeLineup(l) {
+    return (l.opponent ? l.team + " v " + l.opponent : l.team + " (" + l.season + ")") +
+           ", " + l.competition;
+  }
+
+  // Deterministic shuffle, so a surname always anagrams the same way.
+  function anagramOf(word) {
+    var letters = word.replace(/[^a-z]/gi, "").toUpperCase().split("");
+    if (letters.length < 3) return letters.join(" ");
+    var rnd = rngFrom(hashSeed(word));
+    for (var attempt = 0; attempt < 8; attempt++) {
+      for (var i = letters.length - 1; i > 0; i--) {
+        var j = Math.floor(rnd() * (i + 1));
+        var tmp = letters[i]; letters[i] = letters[j]; letters[j] = tmp;
+      }
+      // An "anagram" that comes out as the word itself is no clue at all.
+      if (letters.join("") !== word.replace(/[^a-z]/gi, "").toUpperCase()) break;
+    }
+    return letters.join(" ");
+  }
+
+  function nameParts(player) {
+    var raw = String(player.name).trim().split(/\s+/);
+    return { first: raw.length > 1 ? raw[0] : null, surname: surnameOf(player.name) };
+  }
+
+  // Only offer clues that say something: no forename for a single-name player,
+  // no "elsewhere" for someone who appears once.
   function cluesFor(slot) {
-    var data = (game.lineup.players[slot] || {}).clues || {};
+    var player = game.lineup.players[slot];
+    var parts = nameParts(player);
+    var elsewhere = otherLineups(player.name, game.lineup.id);
     return CLUES.filter(function (clue) {
-      return DERIVED[clue.key] || data[clue.key];
+      if (clue.key === "first") return !!parts.first;
+      if (clue.key === "elsewhere") return elsewhere.length > 0;
+      return true;
     });
   }
 
   function clueText(slot, key) {
     var player = game.lineup.players[slot];
-    if (key === "initials") return initialsFor(player.name);
+    var parts = nameParts(player);
+    var surname = parts.surname.replace(/[^a-z]/gi, "");
+
     if (key === "reveal") return player.name;
-    var value = (player.clues || {})[key];
-    return Array.isArray(value) ? value.join(" → ") : value;
+    if (key === "initials") return initialsFor(player.name);
+    if (key === "first") return parts.first;
+    if (key === "letter") return surname.charAt(0).toUpperCase();
+    if (key === "length") {
+      return surname.length + " letters" +
+        (parts.first ? ", not counting the forename." : ", and he goes by one name only.");
+    }
+    if (key === "novowels") return surname.toUpperCase().replace(/[AEIOU]/g, "·");
+    if (key === "anagram") return anagramOf(surname);
+    if (key === "elsewhere") {
+      var others = otherLineups(player.name, game.lineup.id);
+      return "He also starts for " + describeLineup(others[0]) +
+             (others.length > 1 ? " (and " + (others.length - 1) + " more in this archive)." : ".");
+    }
+    return "";
   }
 
   function buyClue(slot, key) {
@@ -1257,11 +1322,6 @@ SCRIPT = r"""
       }
       list.appendChild(row);
     });
-
-    if (offers.length <= 2) {
-      list.appendChild(el("li", "clue-none",
-        "Only the basics for this one — the written clues have not been added for him yet."));
-    }
   }
 
   function openClues(slot) {
@@ -1432,6 +1492,25 @@ SCRIPT = r"""
   });
 
   paintHome();
+
+  /* Deep link: ?lineup=ucl-1999-final-manutd&difficulty=hard starts that exact XI,
+     so a particular puzzle can be handed to someone else. Ids come from
+     data/lineups.json. */
+  (function deepLink() {
+    var params = new URLSearchParams(window.location.search);
+    var wantedGrade = params.get("difficulty");
+    if (wantedGrade && GRADES[wantedGrade]) {
+      grade = wantedGrade;
+      document.querySelectorAll("[data-grade]").forEach(function (chip) {
+        chip.setAttribute("aria-checked", String(chip.dataset.grade === grade));
+      });
+      paintTerms();
+    }
+    var wanted = params.get("lineup");
+    if (!wanted) return;
+    var lineup = LINEUPS.filter(function (l) { return l.id === wanted; })[0];
+    if (lineup) begin(lineup, grade, "link:" + wanted + ":" + Math.random(), "quick");
+  })();
 })();
 </script>
 """
@@ -1455,9 +1534,6 @@ def build(fragment: bool = False) -> str:
                     "name": p["name"],
                     "pos": p.get("pos"),
                     "accepts": p.get("accepts", []),
-                    # Clue sets are optional; a player without one is offered only
-                    # the clues derived from his name.
-                    "clues": p.get("clues", {}),
                 }
                 for p in entry["players"]
             ],
