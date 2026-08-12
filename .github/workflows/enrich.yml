@@ -4,9 +4,11 @@
 # has no route to Wikidata, while a CI runner does. It is manual (workflow_dispatch)
 # so a lookup only happens when someone asks for one.
 #
-#   mode: probe  - a handful of known players, printed for eyeballing. Costs nothing
-#                  and proves the lookup still works.
-#   mode: all    - every player in data/lineups.json.
+#   mode: probe   - a handful of known players, printed for eyeballing. Costs nothing
+#                   and proves the lookup still works.
+#   mode: all     - every player in data/lineups.json. Takes about half an hour.
+#   mode: missing - only the players the review branch does not already hold. Use this
+#                   to chase stragglers; a full sweep is far too slow a loop for that.
 #
 # A full sweep pushes its result to the data/player-facts branch rather than to main.
 # These facts end up in a game, so they get read before they land: the branch can be
@@ -17,9 +19,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "probe (a few players) or all (the whole archive)"
+        description: "probe (a few), all (the archive), missing (only the stragglers)"
         type: choice
-        options: [probe, all]
+        options: [probe, all, missing]
         default: probe
 
 permissions:
@@ -43,15 +45,26 @@ jobs:
         if: inputs.mode == 'all'
         run: python scripts/fetch_player_facts.py --all --out data/player_facts.json
 
+      - name: Start from the last sweep
+        if: inputs.mode == 'missing'
+        run: |
+          git fetch origin data/player-facts
+          git show origin/data/player-facts:data/player_facts.json > data/player_facts.json
+          python -c "import json;print(len(json.load(open('data/player_facts.json'))),'players carried over')"
+
+      - name: Look up only the stragglers
+        if: inputs.mode == 'missing'
+        run: python scripts/fetch_player_facts.py --missing --merge data/player_facts.json
+
       - name: Upload the results for review
-        if: inputs.mode == 'all'
+        if: inputs.mode != 'probe'
         uses: actions/upload-artifact@v4
         with:
           name: player-facts
           path: data/player_facts.json
 
       - name: Push the results to a branch for review
-        if: inputs.mode == 'all'
+        if: inputs.mode != 'probe'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

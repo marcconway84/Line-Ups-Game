@@ -294,3 +294,114 @@ class TestRejectionReasons:
 
     def test_a_good_spell_has_no_reason(self):
         assert fetch.rejection_reason(1941, "1958-01-01T00:00:00Z", "1895-01-01T00:00:00Z") is None
+
+
+class TestResolvingAName:
+    """The first full sweep reported success while silently losing 28 players.
+
+    Every one of them - Messi, Xavi, Kimmich among them - came back as "NOT FOUND"
+    because the whole-entity request answered without the claims it was asked for.
+    These tests pin the two things that let that happen: a request that treats an
+    error body as an empty answer, and a lookup that cannot say why it gave up.
+    """
+
+    def test_an_error_body_is_raised_not_swallowed(self, monkeypatch):
+        monkeypatch.setattr(
+            fetch.urllib.request,
+            "urlopen",
+            lambda *a, **k: _FakeResponse('{"error": {"info": "too big"}}'),
+        )
+        with pytest.raises(RuntimeError, match="too big"):
+            fetch._get(fetch.WIKIDATA_API, {})
+
+    def test_one_property_is_asked_for_at_a_time(self, monkeypatch):
+        asked = []
+
+        def fake_get(url, params, **kwargs):
+            asked.append(params)
+            return {"claims": {"P106": [_occupation(fetch.ASSOCIATION_FOOTBALLER)]}}
+
+        monkeypatch.setattr(fetch, "_get", fake_get)
+        claims = fetch.footballer_claims("Q615")
+        assert fetch.is_footballer(claims)
+        assert asked[0]["action"] == "wbgetclaims"
+        assert asked[0]["property"] == "P106"
+        # Occupation settled it, so there was no need to ask about sport as well.
+        assert len(asked) == 1
+
+    def test_sport_is_only_asked_for_when_occupation_is_silent(self, monkeypatch):
+        asked = []
+
+        def fake_get(url, params, **kwargs):
+            asked.append(params["property"])
+            if params["property"] == "P641":
+                return {"claims": {"P641": [_occupation(fetch.ASSOCIATION_FOOTBALL)]}}
+            return {"claims": {}}
+
+        monkeypatch.setattr(fetch, "_get", fake_get)
+        assert fetch.is_footballer(fetch.footballer_claims("Q42"))
+        assert asked == ["P106", "P641"]
+
+    def test_a_failed_lookup_says_which_entities_it_turned_down(self, monkeypatch):
+        def fake_get(url, params, **kwargs):
+            if params.get("action") == "wbsearchentities":
+                return {"search": [{"id": "Q1", "description": "a singer"}]}
+            return {"claims": {}}
+
+        monkeypatch.setattr(fetch, "_get", fake_get)
+        trace = []
+        assert fetch.find_player("Someone Else", trace) is None
+        assert any("Q1" in line and "a singer" in line for line in trace)
+
+    def test_a_search_with_no_hits_says_so(self, monkeypatch):
+        monkeypatch.setattr(fetch, "_get", lambda url, params, **kw: {"search": []})
+        trace = []
+        assert fetch.find_player("Nobody At All", trace) is None
+        assert trace == ["search returned nothing"]
+
+
+class TestRetries:
+    def test_a_rate_limit_is_retried(self, monkeypatch):
+        calls = []
+
+        def flaky(*a, **k):
+            calls.append(1)
+            if len(calls) < 3:
+                raise fetch.urllib.error.HTTPError("u", 429, "slow down", {}, None)
+            return _FakeResponse('{"ok": true}')
+
+        monkeypatch.setattr(fetch.urllib.request, "urlopen", flaky)
+        monkeypatch.setattr(fetch.time, "sleep", lambda _: None)
+        assert fetch._get(fetch.WIKIDATA_API, {}) == {"ok": True}
+        assert len(calls) == 3
+
+    def test_a_missing_page_is_not_retried(self, monkeypatch):
+        calls = []
+
+        def gone(*a, **k):
+            calls.append(1)
+            raise fetch.urllib.error.HTTPError("u", 404, "gone", {}, None)
+
+        monkeypatch.setattr(fetch.urllib.request, "urlopen", gone)
+        monkeypatch.setattr(fetch.time, "sleep", lambda _: None)
+        with pytest.raises(fetch.urllib.error.HTTPError):
+            fetch._get(fetch.WIKIDATA_API, {})
+        assert len(calls) == 1
+
+
+def _occupation(qid: str) -> dict:
+    return {"mainsnak": {"datavalue": {"value": {"id": qid}}}}
+
+
+class _FakeResponse:
+    def __init__(self, body: str):
+        self._body = body.encode("utf-8")
+
+    def read(self) -> bytes:
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False

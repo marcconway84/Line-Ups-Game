@@ -26,6 +26,7 @@ import argparse
 import json
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -37,6 +38,9 @@ WIKIDATA_API = "https://www.wikidata.org/w/api.php"
 SPARQL = "https://query.wikidata.org/sparql"
 # Wikidata asks for a descriptive agent so it can contact you about heavy use.
 USER_AGENT = "LineUpsGame/1.0 (https://github.com/marcconway84/Line-Ups-Game) python-urllib"
+
+#: Rate limiting and short outages, not "this does not exist" - worth another go.
+RETRY_CODES = frozenset({429, 500, 502, 503, 504})
 
 ASSOCIATION_FOOTBALLER = "Q937857"
 ASSOCIATION_FOOTBALL = "Q2736"
@@ -188,20 +192,68 @@ def is_senior_side(label: str) -> bool:
     return not any(marker in lowered for marker in NOT_A_SENIOR_SIDE)
 
 
-def _get(url: str, params: dict) -> dict:
+def _get(url: str, params: dict, attempts: int = 4) -> dict:
+    """One request, retried on the failures that are worth retrying.
+
+    Wikidata rate-limits and occasionally 503s under a sweep of several hundred
+    players. Those are temporary, so back off and try again rather than losing the
+    player. A 404 or a bad query is not temporary, so it is raised at once.
+    """
+    target = url + "?" + urllib.parse.urlencode(params)
     request = urllib.request.Request(
-        url + "?" + urllib.parse.urlencode(params),
-        headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+        target, headers={"User-Agent": USER_AGENT, "Accept": "application/json"}
     )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
+    for attempt in range(attempts):
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+            break
+        except urllib.error.HTTPError as exc:
+            if exc.code not in RETRY_CODES or attempt == attempts - 1:
+                raise
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
+            if attempt == attempts - 1:
+                raise
+        time.sleep(2**attempt)
+
+    # The API answers 200 with an error body. Left unchecked this reads as "no data"
+    # and quietly drops a player, which is how the first sweep lost Messi and Xavi.
+    if isinstance(payload, dict) and "error" in payload:
+        raise RuntimeError(f"wikidata: {payload['error'].get('info', payload['error'])}")
+    return payload
 
 
-def find_player(name: str) -> dict | None:
+def claims_for(qid: str, prop: str) -> list:
+    """The statements one entity holds for one property.
+
+    Asking for a single property rather than the whole item matters: wbgetentities on
+    a well-documented player returns a very large response, and the API can answer
+    without the claims it was asked for. The caller then sees an entity with no
+    occupation and concludes it is not a footballer - which is exactly how Messi,
+    Xavi, Kimmich and twenty-five others vanished from a sweep that reported success.
+    """
+    payload = _get(
+        WIKIDATA_API,
+        {"action": "wbgetclaims", "entity": qid, "property": prop, "format": "json"},
+    )
+    return payload.get("claims", {}).get(prop, [])
+
+
+def footballer_claims(qid: str) -> dict:
+    """The two claims that identify a footballer, fetched one small call at a time."""
+    claims = {"P106": claims_for(qid, "P106")}
+    if not is_footballer(claims):
+        claims["P641"] = claims_for(qid, "P641")
+    return claims
+
+
+def find_player(name: str, trace: list | None = None) -> dict | None:
     """Resolve a name to a Wikidata id, rejecting anyone who is not a footballer.
 
     Returns None rather than a guess when nothing matches - a wrong player is far
-    worse than a missing one, because it produces a confident, wrong clue.
+    worse than a missing one, because it produces a confident, wrong clue. Every
+    candidate considered is appended to `trace`, so a name that resolves to nobody
+    can be explained rather than just counted.
     """
     payload = _get(
         WIKIDATA_API,
@@ -214,15 +266,16 @@ def find_player(name: str) -> dict | None:
             "type": "item",
         },
     )
-    for hit in payload.get("search", []):
+    hits = payload.get("search", [])
+    if trace is not None and not hits:
+        trace.append("search returned nothing")
+    for hit in hits:
         qid = hit["id"]
-        entity = _get(
-            WIKIDATA_API,
-            {"action": "wbgetentities", "ids": qid, "props": "claims", "format": "json"},
-        )
-        claims = entity.get("entities", {}).get(qid, {}).get("claims", {})
+        claims = footballer_claims(qid)
         if is_footballer(claims):
             return {"qid": qid, "label": hit.get("label"), "description": hit.get("description")}
+        if trace is not None:
+            trace.append(f"{qid} ({hit.get('description') or 'no description'}) - not a footballer")
     return None
 
 
@@ -354,9 +407,14 @@ def run(names: list[str], pause: float = 0.4) -> dict:
     out: dict[str, dict] = {}
     for name in names:
         try:
-            found = find_player(name)
+            trace: list[str] = []
+            found = find_player(name, trace)
             if not found:
-                print(f"  {name:<26} NOT FOUND")
+                # Say which entities were looked at and why each was turned down. A bare
+                # "NOT FOUND" cannot be told apart from a bug, and once was one.
+                print(f"  {name:<26} NOT FOUND after {len(trace)} candidates")
+                for line in trace[:5]:
+                    print(f"      {line}")
                 continue
             facts = player_facts(found["qid"])
             out[name] = {**facts, "wikidata_id": found["qid"]}
@@ -408,20 +466,51 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--probe", action="store_true", help="look up a few known players")
     parser.add_argument("--all", action="store_true", help="look up every player in the dataset")
+    parser.add_argument(
+        "--missing",
+        action="store_true",
+        help="look up only the players --merge does not already have",
+    )
+    parser.add_argument(
+        "--merge",
+        type=Path,
+        default=None,
+        help="existing facts file to start from and write back into",
+    )
     parser.add_argument("--out", type=Path, default=None)
     args = parser.parse_args()
 
-    if not (args.probe or args.all):
-        parser.error("choose --probe or --all")
+    if not (args.probe or args.all or args.missing):
+        parser.error("choose --probe, --all or --missing")
+    if args.missing and not args.merge:
+        parser.error("--missing needs --merge to know what is already held")
 
-    names = dataset_names() if args.all else PROBE_NAMES
+    existing: dict[str, dict] = {}
+    if args.merge and args.merge.exists():
+        existing = json.loads(args.merge.read_text(encoding="utf-8"))
+        print(f"Starting from {len(existing)} players already looked up")
+
+    if args.probe:
+        names = PROBE_NAMES
+    elif args.missing:
+        # Only the stragglers. A sweep of the whole archive takes half an hour, which
+        # is too slow a loop for chasing down the last few dozen.
+        names = [name for name in dataset_names() if name not in existing]
+    else:
+        names = dataset_names()
+
     print(f"Looking up {len(names)} players on Wikidata\n")
     results = run(names)
 
-    if args.out:
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(json.dumps(results, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        print(f"\nWrote {args.out}")
+    out_path = args.out or args.merge
+    if out_path:
+        merged = {**existing, **results}
+        # Written in archive order so the file reads like the dataset and diffs cleanly.
+        ordered = {name: merged[name] for name in dataset_names() if name in merged}
+        ordered.update({name: facts for name, facts in merged.items() if name not in ordered})
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(ordered, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"\nWrote {out_path} ({len(ordered)} players)")
 
     report(names, results)
     return 0 if results else 1
