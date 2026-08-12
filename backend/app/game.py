@@ -109,16 +109,24 @@ def daily_index(day: date, total: int) -> int:
 #: Clues a player can buy about one team-mate, dearest first. Price tracks how much
 #: each gives away. Every one is computed from the archive rather than recalled, so
 #: they are exact by construction and exist for every player without hand-authoring.
+#: An anagram is second only to the name itself: it hands over every letter, and a
+#: surname is short enough that a football supporter will usually unscramble it.
 CLUE_COSTS = {
     "reveal": 150,
-    "elsewhere": 100,
-    "first": 80,
+    "anagram": 130,
+    "career": 110,
+    "elsewhere": 90,
+    "first": 75,
     "novowels": 60,
-    "anagram": 45,
+    "nation": 50,
     "initials": 40,
     "length": 25,
     "letter": 20,
 }
+
+#: Clues that come from the Wikidata sweep rather than from the archive itself, and
+#: so are only offered where the lookup found something.
+SOURCED_CLUES = ("nation", "career")
 
 VOWELS = frozenset("aeiou")
 
@@ -165,11 +173,17 @@ def clue_length(name: str) -> str:
     return f"{count} letters{tail}"
 
 
-def available_clues(name: str, also_appears: int = 0) -> list[str]:
+def available_clues(
+    name: str,
+    also_appears: int = 0,
+    has_nationality: bool = False,
+    has_career: bool = False,
+) -> list[str]:
     """Clue keys worth offering for this player, dearest first.
 
-    A forename clue is pointless for a single-name player, and "elsewhere" is only
-    honest when he really does start in another XI.
+    A clue is withheld when it would say nothing: no forename for a single-name
+    player, no "elsewhere" unless he really does start in another XI, and none of the
+    sourced clues unless the lookup found the fact.
     """
     order = sorted(CLUE_COSTS, key=lambda key: -CLUE_COSTS[key])
     out = []
@@ -177,6 +191,10 @@ def available_clues(name: str, also_appears: int = 0) -> list[str]:
         if key == "first" and not forename(name):
             continue
         if key == "elsewhere" and also_appears <= 0:
+            continue
+        if key == "nation" and not has_nationality:
+            continue
+        if key == "career" and not has_career:
             continue
         out.append(key)
     return out

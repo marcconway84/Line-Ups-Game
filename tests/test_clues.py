@@ -34,9 +34,23 @@ class TestPricing:
         assert CLUE_COSTS["letter"] == min(CLUE_COSTS.values())
 
     def test_offered_dearest_first(self):
-        order = available_clues("Peter Schmeichel", also_appears=1)
+        order = available_clues("Peter Schmeichel", also_appears=1,
+                                has_nationality=True, has_career=True)
         costs = [CLUE_COSTS[key] for key in order]
         assert costs == sorted(costs, reverse=True)
+
+    def test_the_anagram_is_second_dearest(self):
+        """It hands over every letter of a short word, so it is nearly the answer."""
+        ranked = sorted(CLUE_COSTS, key=lambda key: -CLUE_COSTS[key])
+        assert ranked[0] == "reveal"
+        assert ranked[1] == "anagram"
+
+    def test_sourced_clues_are_withheld_when_the_lookup_found_nothing(self):
+        offered = available_clues("Peter Schmeichel", also_appears=1)
+        assert "nation" not in offered and "career" not in offered
+        offered = available_clues("Peter Schmeichel", also_appears=1,
+                                  has_nationality=True, has_career=True)
+        assert "nation" in offered and "career" in offered
 
     def test_every_clue_has_a_distinct_price(self):
         assert len(set(CLUE_COSTS.values())) == len(CLUE_COSTS)

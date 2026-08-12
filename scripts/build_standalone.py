@@ -735,12 +735,13 @@ SCRIPT = r"""
      a complete sheet without anyone hand-writing 220 of them. */
   var CLUES = [
     { key: "reveal",    label: "Reveal the name",         cost: 150, blurb: "Just tell me." },
-    { key: "career",    label: "Every club he played for", cost: 130, blurb: "In order." },
-    { key: "elsewhere", label: "Elsewhere in the archive", cost: 100, blurb: "Another XI he starts in." },
-    { key: "first",     label: "First name",              cost: 80,  blurb: "Forename only." },
+    // Second only to the name: every letter, and a surname is short enough to solve.
+    { key: "anagram",   label: "Anagram of the surname",  cost: 130, blurb: "Right letters, wrong order." },
+    { key: "career",    label: "Every club he played for", cost: 110, blurb: "In order." },
+    { key: "elsewhere", label: "Elsewhere in the archive", cost: 90,  blurb: "Another XI he starts in." },
+    { key: "first",     label: "First name",              cost: 75,  blurb: "Forename only." },
     { key: "novowels",  label: "Surname, vowels hidden",  cost: 60,  blurb: "Consonants, with the gaps shown." },
     { key: "nation",    label: "Who he played for",       cost: 50,  blurb: "His national side." },
-    { key: "anagram",   label: "Anagram of the surname",  cost: 45,  blurb: "Right letters, wrong order." },
     { key: "initials",  label: "Initials",                cost: 40,  blurb: "First letters." },
     { key: "length",    label: "Length of the surname",   cost: 25,  blurb: "How many letters." },
     { key: "letter",    label: "First letter of surname", cost: 20,  blurb: "One letter." }
