@@ -25,6 +25,11 @@ DATASET = REPO_ROOT / "data" / "lineups.json"
 DEFAULT_OUT = REPO_ROOT / "dist" / "lineups.html"
 
 TITLE = "Line-Ups &mdash; name the missing players"
+BLURB = ("Name the missing players from 20 famous starting XIs, against the clock. "
+         "England 1966 to Manchester City 2023.")
+#: Where the game is published. Used for the link preview that messaging apps show
+#: when someone pastes the address - those need absolute URLs, not relative ones.
+SITE_URL = "https://marcconway84.github.io/Line-Ups-Game/"
 
 STYLE = """
 <style>
@@ -115,6 +120,25 @@ body {
   border-bottom: 1px solid transparent;
 }
 .textlink:hover, .textlink:focus-visible { color: var(--brass); border-bottom-color: var(--brass); }
+.textlink[hidden] { display: none; }
+.install {
+  color: var(--board-deep);
+  background: var(--brass);
+  padding: 0.3rem 0.55rem;
+  border-bottom: 0;
+}
+.install:hover, .install:focus-visible { background: var(--brass-deep); color: var(--board-deep); border-bottom-color: transparent; }
+.steps { counter-reset: step; list-style: none; padding: 0; }
+.steps li { counter-increment: step; position: relative; padding-left: 1.6rem; }
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  color: var(--brass);
+  font-family: var(--data);
+  font-weight: 700;
+}
+.steps b { color: var(--chalk); }
 
 /* ----------------------------------------------------------------- stage */
 .stage {
@@ -511,6 +535,7 @@ MARKUP = """
 <header class="masthead">
   <button class="wordmark" id="home-link" type="button">Line<span>&middot;</span>Ups</button>
   <nav>
+    <button class="textlink install" type="button" id="install" hidden>Install</button>
     <button class="textlink" type="button" data-dialog="rules">Rules</button>
     <button class="textlink" type="button" data-dialog="record">Record</button>
   </nav>
@@ -612,6 +637,13 @@ MARKUP = """
     <li><strong>Initials</strong> shows the initials of everyone still missing. <strong>Name one</strong> hands a player over. Both cost points.</li>
     <li>Get all eleven before the whistle for a bonus, plus whatever time is left.</li>
   </ul>
+  <button class="btn" type="button" data-close>Close</button>
+</dialog>
+
+<dialog id="dlg-install">
+  <h2>Add to your home screen</h2>
+  <p id="install-lead" style="color:var(--chalk-dim);font-size:0.84rem;margin:0 0 0.7rem"></p>
+  <ul class="steps" id="install-steps"></ul>
   <button class="btn" type="button" data-close>Close</button>
 </dialog>
 
@@ -1130,6 +1162,79 @@ SCRIPT = r"""
     }
   }
 
+  /* ================================================================= install
+     Chrome fires beforeinstallprompt and lets us install in a single tap. Every
+     other case - iOS, and the in-app browsers that open when you tap a link
+     inside another app - has no such API, so the button explains what to do
+     instead of hiding and leaving the player hunting through browser menus. */
+  var installPrompt = null;
+
+  function installed() {
+    return window.matchMedia("(display-mode: standalone)").matches ||
+           window.navigator.standalone === true;
+  }
+
+  function installAdvice() {
+    var ua = navigator.userAgent;
+    var iOS = /iphone|ipad|ipod/i.test(ua);
+    // An in-app browser is a webview: Android, but reporting neither Chrome nor Firefox.
+    var inApp = /android/i.test(ua) && !/chrome\/|firefox\//i.test(ua);
+
+    if (iOS) {
+      return { lead: "On an iPhone or iPad this is done from Safari's share menu.",
+               steps: ["Open this page in <b>Safari</b> (it cannot be done from Chrome on iOS).",
+                       "Tap the <b>Share</b> button — the square with an arrow.",
+                       "Scroll down and tap <b>Add to Home Screen</b>."] };
+    }
+    if (inApp) {
+      return { lead: "You are in the mini browser that opens inside another app. It cannot add icons — Chrome can.",
+               steps: ["Tap the <b>⋮</b> at the top of this window.",
+                       "Choose <b>Open in Chrome</b>, or open the Chrome app and type the address.",
+                       "In Chrome, tap <b>⋮</b> then <b>Add to Home screen</b>."] };
+    }
+    return { lead: "Your browser did not offer a one-tap install, so add it by hand.",
+             steps: ["Open the browser menu — <b>⋮</b> on Android, or the install icon in the address bar on a computer.",
+                     "Choose <b>Install</b> or <b>Add to Home screen</b>.",
+                     "Confirm. The gold XI icon appears with your other apps."] };
+  }
+
+  function showInstallAdvice() {
+    var advice = installAdvice();
+    $("install-lead").textContent = advice.lead;
+    var list = $("install-steps");
+    list.innerHTML = "";
+    advice.steps.forEach(function (step) {
+      var li = document.createElement("li");
+      li.innerHTML = step;      // trusted, authored above - never player input
+      list.appendChild(li);
+    });
+    openDialog("install");
+  }
+
+  window.addEventListener("beforeinstallprompt", function (event) {
+    event.preventDefault();
+    installPrompt = event;
+    $("install").hidden = installed();
+  });
+
+  window.addEventListener("appinstalled", function () {
+    installPrompt = null;
+    $("install").hidden = true;
+  });
+
+  $("install").addEventListener("click", function () {
+    if (!installPrompt) { showInstallAdvice(); return; }
+    installPrompt.prompt();
+    installPrompt.userChoice.then(function (choice) {
+      if (choice && choice.outcome === "accepted") $("install").hidden = true;
+      installPrompt = null;
+    });
+  });
+
+  // Offer the button to anyone not already running it as an app; the click
+  // handler works out whether a real prompt is available.
+  if (!installed()) $("install").hidden = false;
+
   /* =================================================================== wiring */
   function openDialog(name) {
     if (name === "record") paintRecord($("dlg-record-body"));
@@ -1214,8 +1319,22 @@ def build(fragment: bool = False) -> str:
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="description" content="Name the missing players from famous starting XIs." />
+<meta name="description" content="{BLURB}" />
 <meta name="theme-color" content="#0a1f18" />
+<!-- Link preview: what WhatsApp, iMessage, Slack and the rest show when the
+     address is pasted into a conversation. -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Line-Ups" />
+<meta property="og:title" content="Line-Ups — the football lineup quiz" />
+<meta property="og:description" content="{BLURB}" />
+<meta property="og:url" content="{SITE_URL}" />
+<meta property="og:image" content="{SITE_URL}og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Line-Ups — the football lineup quiz" />
+<meta name="twitter:description" content="{BLURB}" />
+<meta name="twitter:image" content="{SITE_URL}og-image.png" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="icon.svg" type="image/svg+xml" />
 <link rel="apple-touch-icon" href="icon-180.png" />
