@@ -219,3 +219,42 @@ def test_cli_refuses_to_run_without_a_mode(monkeypatch, capsys):
         fetch.main()
     assert exit_info.value.code != 0
     assert "--probe" in capsys.readouterr().err
+
+
+class TestReviewSummary:
+    """The sweep's last words should be what a reviewer needs to act on."""
+
+    RESULTS = {
+        "Peter Schmeichel": {"nationality": "Denmark", "career": ["Brondby", "Manchester United"],
+                             "rejected_spells": []},
+        "Bobby Moore": {"nationality": "England", "career": ["West Ham United"],
+                        "rejected_spells": ["FC Midtjylland"]},
+        "Someone Obscure": {"nationality": None, "career": [], "rejected_spells": []},
+    }
+    NAMES = ["Peter Schmeichel", "Bobby Moore", "Someone Obscure", "Never Heard Of Him"]
+
+    def summary(self, capsys):
+        fetch.report(self.NAMES, self.RESULTS)
+        return capsys.readouterr().out
+
+    def test_counts_are_reported(self, capsys):
+        out = self.summary(capsys)
+        assert "looked up      4" in out
+        assert "resolved       3" in out
+
+    def test_unresolved_players_are_named(self, capsys):
+        assert "Never Heard Of Him" in self.summary(capsys)
+
+    def test_players_missing_facts_are_named(self, capsys):
+        out = self.summary(capsys)
+        assert "Resolved but no nationality" in out
+        assert "Someone Obscure" in out
+
+    def test_thin_careers_are_flagged_for_checking(self, capsys):
+        # One club is usually a lookup that half-worked, worth a human glance.
+        assert "Only one club" in self.summary(capsys)
+
+    def test_rejected_claims_are_surfaced(self, capsys):
+        out = self.summary(capsys)
+        assert "FC Midtjylland" in out
+        assert "rejected as implausible" in out

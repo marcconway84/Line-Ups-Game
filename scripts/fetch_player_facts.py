@@ -342,6 +342,42 @@ def run(names: list[str], pause: float = 0.4) -> dict:
     return out
 
 
+def report(names: list[str], results: dict) -> None:
+    """Print what a reviewer needs, last, so it survives a truncated log.
+
+    A sweep prints a line per player; the things worth acting on - who could not be
+    found, who came back thin, which source claims were thrown out - would otherwise
+    be scattered through hundreds of lines.
+    """
+    missing = [name for name in names if name not in results]
+    no_nationality = sorted(n for n, f in results.items() if not f.get("nationality"))
+    no_career = sorted(n for n, f in results.items() if not f.get("career"))
+    thin_career = sorted(n for n, f in results.items() if 0 < len(f.get("career", [])) < 2)
+    rejected = {n: f["rejected_spells"] for n, f in results.items() if f.get("rejected_spells")}
+
+    def show(title: str, items, limit: int = 25) -> None:
+        print(f"\n{title}: {len(items)}")
+        for item in list(items)[:limit]:
+            print(f"    {item}")
+        if len(items) > limit:
+            print(f"    ... and {len(items) - limit} more")
+
+    print("\n" + "=" * 68)
+    print("REVIEW SUMMARY")
+    print("=" * 68)
+    print(f"  looked up      {len(names)}")
+    print(f"  resolved       {len(results)}")
+    print(f"  with country   {len(results) - len(no_nationality)}")
+    print(f"  with a career  {len(results) - len(no_career)}")
+
+    show("NOT FOUND on Wikidata (no clue data for these)", missing)
+    show("Resolved but no nationality", no_nationality)
+    show("Resolved but no club career", no_career)
+    show("Only one club - check these by hand", thin_career)
+    show("Source claims rejected as implausible",
+         [f"{name}: {', '.join(spells)}" for name, spells in sorted(rejected.items())])
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--probe", action="store_true", help="look up a few known players")
@@ -355,12 +391,13 @@ def main() -> int:
     names = dataset_names() if args.all else PROBE_NAMES
     print(f"Looking up {len(names)} players on Wikidata\n")
     results = run(names)
-    print(f"\nResolved {len(results)}/{len(names)}")
 
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(results, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        print(f"Wrote {args.out}")
+        print(f"\nWrote {args.out}")
+
+    report(names, results)
     return 0 if results else 1
 
 
