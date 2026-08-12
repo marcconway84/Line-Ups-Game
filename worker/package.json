@@ -1,0 +1,15 @@
+{
+  "name": "lineups-scores",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Leaderboard for Line-Ups: best score per XI, first attempt only.",
+  "scripts": {
+    "dev": "wrangler dev --local --port 8787",
+    "test": "node --test 'test/*.test.js'",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

@@ -7,6 +7,7 @@ passed in. That keeps the rules testable and lets the API layer stay thin.
 from __future__ import annotations
 
 import hashlib
+import math
 from dataclasses import dataclass
 from datetime import date
 from typing import Sequence
@@ -200,6 +201,21 @@ def available_clues(
     return out
 
 
+def round_half_up(value: float) -> int:
+    """Round .5 upwards, the way the game in the browser does.
+
+    Python's built-in round() sends a half to the nearest even number, JavaScript's
+    Math.round sends it up. That is not academic here: at medium difficulty a second
+    on the clock is worth 7.5 points, so every odd number of seconds left lands on a
+    half and the two rules disagree by a point.
+
+    The player watches the browser's total tick up in front of them, and the
+    leaderboard checks scores against this file. So the browser's rule is the one
+    that has to win, and Python is the side that bends.
+    """
+    return math.floor(value + 0.5)
+
+
 @dataclass(frozen=True)
 class ScoreBreakdown:
     guessed: int
@@ -224,10 +240,10 @@ def score_round(
     for free at kick-off earn nothing. Finishing the XI pays a bonus plus whatever time
     was left on the clock.
     """
-    guess_points = int(round(guessed_slots * POINTS_PER_PLAYER * difficulty.multiplier))
-    completion = int(round(COMPLETION_BONUS * difficulty.multiplier)) if completed else 0
+    guess_points = round_half_up(guessed_slots * POINTS_PER_PLAYER * difficulty.multiplier)
+    completion = round_half_up(COMPLETION_BONUS * difficulty.multiplier) if completed else 0
     time_bonus = (
-        int(round(max(0, seconds_remaining) * POINTS_PER_SECOND_REMAINING * difficulty.multiplier))
+        round_half_up(max(0, seconds_remaining) * POINTS_PER_SECOND_REMAINING * difficulty.multiplier)
         if completed
         else 0
     )

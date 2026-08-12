@@ -64,3 +64,28 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://lineups:lineups@localhost:5432/lineups_db
         run: pytest tests/test_api.py
+
+  worker:
+    # The leaderboard recalculates every score it is sent, so it has to agree with the
+    # game to the point. These tests run the worker for real against a local database.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install --no-fund --no-audit
+
+      - name: Scoring and token tests
+        run: npm test
+
+      - name: End-to-end tests against a real worker
+        run: node --test 'test/service.test.js'
+        env:
+          CI: "1"

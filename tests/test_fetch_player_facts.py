@@ -405,3 +405,82 @@ class _FakeResponse:
 
     def __exit__(self, *exc):
         return False
+
+
+class TestSingleNamePlayers:
+    """Xavi, Leonardo, Gabi: a common word is no use to a search that ranks by label.
+
+    The archive knows which side each of them lined up for, and that is enough to
+    tell a full-back from a painter without anyone hand-picking a Wikidata id.
+    """
+
+    def test_the_search_is_restricted_to_footballers(self, monkeypatch):
+        asked = {}
+
+        def fake_get(url, params, **kwargs):
+            asked.update(params)
+            return {"query": {"search": [{"title": "Q41473"}]}}
+
+        monkeypatch.setattr(fetch, "_get", fake_get)
+        assert fetch.search_among_footballers("Xavi", "Barcelona") == ["Q41473"]
+        assert f"haswbstatement:P106={fetch.ASSOCIATION_FOOTBALLER}" in asked["srsearch"]
+        assert "Barcelona" in asked["srsearch"]
+
+    def test_the_club_is_left_out_when_there_is_none(self, monkeypatch):
+        asked = {}
+        monkeypatch.setattr(
+            fetch,
+            "_get",
+            lambda url, params, **kw: (asked.update(params), {"query": {"search": []}})[1],
+        )
+        fetch.search_among_footballers("Xavi", None)
+        assert asked["srsearch"].startswith("Xavi haswbstatement")
+
+    def test_a_footballer_who_does_not_go_by_the_name_is_refused(self, monkeypatch):
+        """The looser search must not hand back whoever ranked highest at the club."""
+
+        def fake_get(url, params, **kwargs):
+            action = params.get("action")
+            if action == "wbsearchentities":
+                return {"search": []}
+            if action == "query":
+                return {"query": {"search": [{"title": "Q999"}]}}
+            if action == "wbgetentities":
+                return {"entities": {"Q999": {"labels": {"en": {"value": "Someone Else"}}}}}
+            return {"claims": {}}
+
+        monkeypatch.setattr(fetch, "_get", fake_get)
+        trace = []
+        assert fetch.find_player("Gabi", trace, "Atletico Madrid") is None
+        assert any("does not go by 'Gabi'" in line for line in trace)
+
+    def test_a_matching_alias_is_accepted(self, monkeypatch):
+        def fake_get(url, params, **kwargs):
+            action = params.get("action")
+            if action == "wbsearchentities":
+                return {"search": []}
+            if action == "query":
+                return {"query": {"search": [{"title": "Q41473"}]}}
+            if action == "wbgetentities":
+                return {
+                    "entities": {
+                        "Q41473": {
+                            "labels": {"en": {"value": "Xavier Hernandez Creus"}},
+                            "aliases": {"en": [{"value": "Xavi"}]},
+                        }
+                    }
+                }
+            return {"claims": {"P106": [_occupation(fetch.ASSOCIATION_FOOTBALLER)]}}
+
+        monkeypatch.setattr(fetch, "_get", fake_get)
+        found = fetch.find_player("Xavi", [], "Barcelona")
+        assert found and found["qid"] == "Q41473"
+
+    def test_accents_do_not_stop_a_match(self):
+        assert fetch.fold("Félix") == fetch.fold("Felix")
+        assert fetch.fold("  Piazza ") == "piazza"
+
+    def test_every_player_is_paired_with_a_side(self):
+        entries = fetch.dataset_entries()
+        assert len(entries) == len(fetch.dataset_names())
+        assert all(name and team for name, team in entries)

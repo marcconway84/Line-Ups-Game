@@ -26,6 +26,7 @@ import argparse
 import json
 import sys
 import time
+import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -247,7 +248,57 @@ def footballer_claims(qid: str) -> dict:
     return claims
 
 
-def find_player(name: str, trace: list | None = None) -> dict | None:
+def labels_and_aliases(qid: str) -> set[str]:
+    """Every English name an entity answers to, folded for comparison."""
+    payload = _get(
+        WIKIDATA_API,
+        {
+            "action": "wbgetentities",
+            "ids": qid,
+            "props": "labels|aliases",
+            "languages": "en",
+            "format": "json",
+        },
+    )
+    entity = payload.get("entities", {}).get(qid, {})
+    names = {entity.get("labels", {}).get("en", {}).get("value", "")}
+    names |= {alias.get("value", "") for alias in entity.get("aliases", {}).get("en", [])}
+    return {fold(n) for n in names if n}
+
+
+def fold(text: str) -> str:
+    """Strip accents and case so "Félix" and "Felix" compare equal."""
+    stripped = unicodedata.normalize("NFKD", str(text))
+    return "".join(ch for ch in stripped if not unicodedata.combining(ch)).casefold().strip()
+
+
+def search_among_footballers(name: str, hint: str | None) -> list[str]:
+    """Full-text search restricted to people whose occupation is footballer.
+
+    The plain entity search ranks by how well a string matches a label, which is no
+    help for a player who goes by one common word: searching "Leonardo" offers the
+    painter long before the full-back. Filtering the search itself to footballers, and
+    adding the club from the lineup as an ordinary search term, puts the right person
+    in reach without anybody having to hand-pick an id.
+    """
+    terms = [name]
+    if hint:
+        terms.append(hint)
+    terms.append(f"haswbstatement:P106={ASSOCIATION_FOOTBALLER}")
+    payload = _get(
+        WIKIDATA_API,
+        {
+            "action": "query",
+            "list": "search",
+            "srsearch": " ".join(terms),
+            "srlimit": 10,
+            "format": "json",
+        },
+    )
+    return [row["title"] for row in payload.get("query", {}).get("search", [])]
+
+
+def find_player(name: str, trace: list | None = None, hint: str | None = None) -> dict | None:
     """Resolve a name to a Wikidata id, rejecting anyone who is not a footballer.
 
     Returns None rather than a guess when nothing matches - a wrong player is far
@@ -276,6 +327,19 @@ def find_player(name: str, trace: list | None = None) -> dict | None:
             return {"qid": qid, "label": hit.get("label"), "description": hit.get("description")}
         if trace is not None:
             trace.append(f"{qid} ({hit.get('description') or 'no description'}) - not a footballer")
+
+    # Nothing in the name search was a footballer. Try again among footballers only,
+    # with the club he lined up for as a hint.
+    for qid in search_among_footballers(name, hint):
+        # This path is looser than the one above, so the entity has to actually answer
+        # to the name being looked for. Without that check, "Gabi" plus "Atletico
+        # Madrid" would cheerfully return whichever Atletico player ranked highest.
+        if fold(name) not in labels_and_aliases(qid):
+            if trace is not None:
+                trace.append(f"{qid} - a footballer, but does not go by '{name}'")
+            continue
+        if is_footballer(footballer_claims(qid)):
+            return {"qid": qid, "label": name, "description": f"found via {hint or 'search'}"}
     return None
 
 
@@ -383,14 +447,24 @@ def club_is_new_or_earlier(clubs: dict, label: str, start: str | None) -> bool:
 
 
 def dataset_names() -> list[str]:
+    return [name for name, _ in dataset_entries()]
+
+
+def dataset_entries() -> list[tuple[str, str]]:
+    """Every player, paired with the side he lines up for.
+
+    The club is only used to break ties when a name alone will not do it - which is
+    the difference between finding Wilson Piazza and finding a square in Rome.
+    """
     doc = json.loads(DATASET.read_text(encoding="utf-8"))
-    seen, names = set(), []
+    seen: set[str] = set()
+    entries: list[tuple[str, str]] = []
     for lineup in doc["lineups"]:
         for player in lineup["players"]:
             if player["name"] not in seen:
                 seen.add(player["name"])
-                names.append(player["name"])
-    return names
+                entries.append((player["name"], lineup["team"]))
+    return entries
 
 
 PROBE_NAMES = [
@@ -404,11 +478,12 @@ PROBE_NAMES = [
 
 
 def run(names: list[str], pause: float = 0.4) -> dict:
+    hints = dict(dataset_entries())
     out: dict[str, dict] = {}
     for name in names:
         try:
             trace: list[str] = []
-            found = find_player(name, trace)
+            found = find_player(name, trace, hints.get(name))
             if not found:
                 # Say which entities were looked at and why each was turned down. A bare
                 # "NOT FOUND" cannot be told apart from a bug, and once was one.

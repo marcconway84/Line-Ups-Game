@@ -1,0 +1,106 @@
+# Deploys the leaderboard to Cloudflare.
+#
+# This runs here rather than from a laptop because the development sandbox has no
+# route to Cloudflare's API, and because it keeps the deploy credential in GitHub's
+# secret store instead of on anyone's machine.
+#
+# One repository secret is needed, under Settings -> Secrets and variables -> Actions:
+#
+#   CLOUDFLARE_API_TOKEN   a token with Workers Scripts:Edit and D1:Edit
+#
+# The account id is in wrangler.toml. It is an identifier, not a credential - it
+# appears in the address bar of the Cloudflare dashboard - so it does not need hiding.
+#
+# The workflow is safe to run repeatedly. It creates the database only if it is not
+# already there, applies the schema with CREATE TABLE IF NOT EXISTS, and invents a
+# signing secret only on the first deploy, so existing rounds are not invalidated by
+# a redeploy.
+name: Deploy the leaderboard
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Check the credential is there
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is not set. Add it under Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm install --no-fund --no-audit
+
+      - name: Test before deploying
+        run: |
+          npm test
+          node --test 'test/service.test.js'
+
+      - name: Find or create the database
+        id: database
+        run: |
+          set -euo pipefail
+          id=$(npx wrangler d1 list --json | jq -r '.[] | select(.name == "lineups-scores") | .uuid' || true)
+          if [ -z "$id" ]; then
+            echo "No database yet - creating one."
+            npx wrangler d1 create lineups-scores
+            id=$(npx wrangler d1 list --json | jq -r '.[] | select(.name == "lineups-scores") | .uuid')
+          else
+            echo "Reusing the existing database."
+          fi
+          if [ -z "$id" ]; then echo "::error::could not determine the database id"; exit 1; fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+      - name: Point the config at it
+        run: sed -i "s/PLACEHOLDER/${{ steps.database.outputs.id }}/" wrangler.toml
+
+      - name: Apply the schema
+        run: npx wrangler d1 execute lineups-scores --remote --file=schema.sql
+
+      - name: Set the signing secret, once
+        run: |
+          set -euo pipefail
+          # Rotating this on every deploy would invalidate every round in progress, so
+          # it is only set when the worker does not already have one.
+          existing=$(npx wrangler secret list --name lineups-scores 2>/dev/null || echo '[]')
+          if echo "$existing" | grep -q SCORE_SECRET; then
+            echo "Signing secret already set - leaving it alone."
+          else
+            openssl rand -base64 48 | npx wrangler secret put SCORE_SECRET --name lineups-scores
+          fi
+
+      - name: Deploy
+        id: deploy
+        run: npx wrangler deploy 2>&1 | tee deploy.log
+
+      - name: Say where it went
+        run: |
+          url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' deploy.log | head -1 || true)
+          {
+            echo "### Leaderboard deployed"
+            echo
+            if [ -n "$url" ]; then
+              echo "Address: \`$url\`"
+              echo
+              echo "Put this in \`data/leaderboard.json\` and rebuild the game."
+            else
+              echo "Deployed, but the address was not in the log - check the run above."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

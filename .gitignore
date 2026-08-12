@@ -17,3 +17,9 @@ node_modules/
 
 # build output
 dist/
+
+# leaderboard worker
+worker/.dev.vars
+worker/.wrangler/
+worker/node_modules
+package-lock.json

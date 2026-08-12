@@ -1,0 +1,25 @@
+# The leaderboard service.
+#
+# Deployed from CI (.github/workflows/deploy-worker.yml) rather than from a laptop,
+# because the development sandbox cannot reach Cloudflare's API.
+#
+# The signing secret is not here. It is set once with:
+#     wrangler secret put SCORE_SECRET
+# or, in CI, from the SCORE_SECRET repository secret.
+
+name = "lineups-scores"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+# An identifier, not a credential - it is in the address bar of the Cloudflare
+# dashboard. The API token is the secret, and that lives in GitHub's secret store.
+account_id = "1ea23c1661ae925c85ee58bc100087af"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lineups-scores"
+# Filled in by the deploy workflow the first time the database is created.
+database_id = "PLACEHOLDER"
+
+[observability]
+enabled = true
