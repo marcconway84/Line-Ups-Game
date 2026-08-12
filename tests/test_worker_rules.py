@@ -118,3 +118,38 @@ class TestAgreementWithTheWorker:
             difficulty=get_difficulty("medium"),
         )
         assert result.total == 600
+
+
+class TestTheGameFindsTheLeaderboard:
+    """The address is built into the page, so a game without one makes no calls."""
+
+    @staticmethod
+    def payload(tmp_path, config, monkeypatch):
+        import importlib.util
+
+        path = REPO_ROOT / "scripts" / "build_standalone.py"
+        spec = importlib.util.spec_from_file_location("build_standalone", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        target = tmp_path / "leaderboard.json"
+        if config is not None:
+            target.write_text(json.dumps(config), encoding="utf-8")
+        monkeypatch.setattr(module, "LEADERBOARD", target)
+        return module.leaderboard_payload()
+
+    def test_no_config_means_no_leaderboard(self, tmp_path, monkeypatch):
+        assert self.payload(tmp_path, None, monkeypatch) == "null"
+
+    def test_an_empty_url_means_no_leaderboard(self, tmp_path, monkeypatch):
+        assert self.payload(tmp_path, {"url": ""}, monkeypatch) == "null"
+        assert self.payload(tmp_path, {"url": "   "}, monkeypatch) == "null"
+
+    def test_a_configured_url_is_built_in(self, tmp_path, monkeypatch):
+        out = self.payload(tmp_path, {"url": "https://scores.example.workers.dev/"}, monkeypatch)
+        assert json.loads(out) == {"url": "https://scores.example.workers.dev"}
+
+    def test_plain_http_is_refused(self, tmp_path, monkeypatch):
+        # The game is served over https; a plain-http board would be blocked by the
+        # browser anyway, and failing at build time says so plainly.
+        with pytest.raises(SystemExit):
+            self.payload(tmp_path, {"url": "http://scores.example.com"}, monkeypatch)

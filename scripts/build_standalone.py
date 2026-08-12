@@ -26,6 +26,7 @@ DATASET = REPO_ROOT / "data" / "lineups.json"
 #: Optional. Produced by scripts/fetch_player_facts.py; absent until a sweep has run,
 #: in which case the sourced clues simply are not offered.
 PLAYER_FACTS = REPO_ROOT / "data" / "player_facts.json"
+LEADERBOARD = REPO_ROOT / "data" / "leaderboard.json"
 DEFAULT_OUT = REPO_ROOT / "dist" / "lineups.html"
 
 TITLE = "Line-Ups &mdash; name the missing players"
@@ -534,6 +535,33 @@ button.man:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px;
 .ledger td:last-child { text-align: right; color: var(--chalk); font-family: var(--data); font-variant-numeric: tabular-nums; }
 .ledger tr.sum td { color: var(--chalk); font-weight: 700; border-bottom: 0; }
 
+/* The leaderboard. One line in the result panel, the table itself in a dialog -
+   the result has to keep fitting on a phone without scrolling, and a top ten
+   cannot. */
+.standing {
+  /* Plain running text, not flex. A flex container turns each run of text into its
+     own item, which put "1st" and "of 43 on this XI" on separate lines. */
+  margin: 0.35rem 0 0; font-size: 0.72rem; color: var(--chalk-dim); line-height: 1.4;
+}
+.standing b { color: var(--chalk); font-family: var(--data); }
+.standing button {
+  background: none; border: 0; padding: 0; margin-left: 0.4rem; cursor: pointer;
+  color: var(--pitch-line, var(--chalk)); font: inherit; text-decoration: underline;
+}
+.board { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
+.board td { padding: 0.28rem 0; border-bottom: var(--rule); color: var(--chalk-dim); }
+.board td.rank { width: 2.2rem; font-family: var(--data); }
+.board td.tally {
+  text-align: right; color: var(--chalk);
+  font-family: var(--data); font-variant-numeric: tabular-nums;
+}
+.board tr.you td { color: var(--chalk); font-weight: 700; }
+.board tr.you td.rank::after { content: " \2190"; }
+#name-input {
+  width: 100%; padding: 0.5rem 0.6rem; font: inherit; color: var(--chalk);
+  background: rgba(0, 0, 0, 0.25); border: var(--rule); border-radius: 0.4rem;
+}
+
 .report {
   color: var(--chalk-dim);
   font-size: 0.72rem;
@@ -662,6 +690,9 @@ MARKUP = """
           </div>
           <table class="ledger" id="ledger"></table>
           <div class="report" id="report"></div>
+          <!-- One line, not a table. The board itself opens in a dialog, because the
+               result panel has to keep fitting on a phone screen without scrolling. -->
+          <p class="standing" id="standing" hidden></p>
           <div class="again">
             <button class="btn" type="button" id="go-again">Another lineup</button>
             <button class="btn btn-quiet" type="button" id="go-home">Menu</button>
@@ -699,6 +730,27 @@ MARKUP = """
   <p id="install-lead" style="color:var(--chalk-dim);font-size:0.84rem;margin:0 0 0.7rem"></p>
   <ul class="steps" id="install-steps"></ul>
   <button class="btn" type="button" data-close>Close</button>
+</dialog>
+
+<dialog id="dlg-board">
+  <h2 id="board-title">Leaderboard</h2>
+  <p class="clue-sub" id="board-sub"></p>
+  <table class="board" id="board-table"></table>
+  <button class="btn" type="button" data-close>Close</button>
+</dialog>
+
+<dialog id="dlg-name">
+  <h2>What shall we call you?</h2>
+  <p class="clue-sub">It goes on the leaderboard next to your score. Nothing else &mdash;
+    no email, no password.</p>
+  <form id="name-form">
+    <input id="name-input" type="text" maxlength="24" autocomplete="nickname"
+           placeholder="Your name" aria-label="Your name" />
+    <div class="again" style="margin-top:0.8rem">
+      <button class="btn" type="submit">Join the board</button>
+      <button class="btn btn-quiet" type="button" id="name-skip">No thanks</button>
+    </div>
+  </form>
 </dialog>
 
 <dialog id="dlg-record">
@@ -973,6 +1025,246 @@ SCRIPT = r"""
     writeRecord(r);
   }
 
+  /* ============================================================= leaderboard */
+  /* Best score per XI, first attempt only.
+
+     Everything here is optional at runtime. If the leaderboard is not configured,
+     or the service cannot be reached, the round plays and scores exactly as it
+     always did - the board simply does not appear. A quiz that stops working
+     because a server is down would be a bad trade for a list of names. */
+
+  var BOARD = __LEADERBOARD__;
+  var WHO_KEY = "lineups.who.v1";
+
+  function boardOn() { return !!(BOARD && BOARD.url); }
+  function boardUrl(path) { return String(BOARD.url).replace(/\/+$/, "") + path; }
+
+  function readWho() {
+    try { return JSON.parse(localStorage.getItem(WHO_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function writeWho(w) { try { localStorage.setItem(WHO_KEY, JSON.stringify(w)); } catch (e) {} }
+
+  /* A random id, made once and kept in this browser.
+
+     This is not a login and is not pretending to be one. It is only what lets the
+     board tell "this player again" from "somebody new", which is all the
+     first-attempt rule needs. Switch device and you are a new player; clear your
+     browser and you are a new player. That is the honest limit of doing this
+     without asking anyone to sign in, and signing in is exactly what would stop
+     people clicking a link and playing. */
+  function whoAmI() {
+    var who = readWho();
+    if (!who.id) {
+      who.id = (window.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : String(Date.now()) + "-" + Math.random().toString(36).slice(2);
+      writeWho(who);
+    }
+    return who;
+  }
+
+  function ordinal(n) {
+    var tens = n % 100;
+    if (tens >= 11 && tens <= 13) return n + "th";
+    return n + (["th", "st", "nd", "rd"][n % 10] || "th");
+  }
+
+  /* Every clue bought this round, flattened. The service prices them itself. */
+  function cluesBought(g) {
+    var out = [];
+    Object.keys(g.bought || {}).forEach(function (slot) {
+      Object.keys(g.bought[slot] || {}).forEach(function (key) { out.push(key); });
+    });
+    return out;
+  }
+
+  /* Asked for as the round starts. The token proves later that the round was
+     actually begun, and how long ago - without it a perfect score could be posted
+     without playing at all. */
+  function claimToken(g) {
+    if (!boardOn()) return;
+    fetch(boardUrl("/round/start"), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ lineup: g.lineup.id, difficulty: g.gradeKey })
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && d.token) g.token = d.token; })
+      .catch(function () { /* no board this round; the game is unaffected */ });
+  }
+
+  function submitScore(g) {
+    var who = whoAmI();
+    standingSays("Sending your score…");
+    fetch(boardUrl("/round/finish"), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        token: g.token,
+        player: who.id,
+        name: who.name,
+        guessed: g.named.length,
+        secondsLeft: Math.max(0, Math.floor(g.secondsLeft)),
+        completed: hidden(g).length === 0,
+        clues: cluesBought(g)
+      })
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+      .then(function (res) {
+        if (!res.ok) { standingSays("The leaderboard turned that round down."); return; }
+        g.standing = res.data;
+        paintStanding(res.data);
+      })
+      .catch(function () { standingSays("Couldn't reach the leaderboard just now."); });
+  }
+
+  function standingSays(text, extra) {
+    var line = $("standing");
+    line.innerHTML = "";
+    line.appendChild(document.createTextNode(text));
+    if (extra) line.appendChild(extra);
+    line.hidden = false;
+  }
+
+  function boardButton(lineupId, label) {
+    var b = el("button", null, label || "See the board");
+    b.type = "button";
+    b.addEventListener("click", function () { openBoard(lineupId); });
+    return b;
+  }
+
+  function paintStanding(data) {
+    var line = $("standing");
+    line.innerHTML = "";
+    if (data.you) {
+      /* "counted" is false when this was not the first attempt. Saying so plainly
+         beats looking like the score failed to send. */
+      if (data.counted === false) {
+        line.appendChild(document.createTextNode("Only your first go counts — you were "));
+      }
+      line.appendChild(el("b", null, ordinal(data.you.rank)));
+      line.appendChild(document.createTextNode(" of " + data.players + " on this XI"));
+    } else {
+      line.appendChild(document.createTextNode(data.players + " have played this XI"));
+    }
+    line.appendChild(boardButton(data.lineup));
+    line.hidden = false;
+  }
+
+  /* Offered once. Someone who says no is not asked again, but can still join later
+     from the same line. */
+  function offerBoard(g) {
+    var line = $("standing");
+    line.hidden = true;
+    line.innerHTML = "";
+    if (!boardOn() || !g.token) return;
+
+    var who = readWho();
+    if (who.name) { submitScore(g); return; }
+    if (who.declined) {
+      var join = el("button", null, "Join the leaderboard");
+      join.type = "button";
+      join.addEventListener("click", function () { askName(g); });
+      standingSays("", join);
+      return;
+    }
+    askName(g);
+  }
+
+  function askName(g) {
+    var dlg = $("dlg-name");
+    var input = $("name-input");
+    input.value = readWho().name || "";
+    dlg.returnValue = "";
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+    setTimeout(function () { input.focus(); }, 50);
+
+    $("name-form").onsubmit = function (event) {
+      event.preventDefault();
+      var who = whoAmI();
+      who.name = input.value.trim().slice(0, 24) || "Anonymous";
+      who.declined = false;
+      writeWho(who);
+      closeDialog(dlg);
+      submitScore(g);
+    };
+    $("name-skip").onclick = function () {
+      var who = whoAmI();
+      who.declined = true;
+      writeWho(who);
+      closeDialog(dlg);
+      offerBoard(g);
+    };
+  }
+
+  function closeDialog(dlg) {
+    if (dlg.close) dlg.close(); else dlg.removeAttribute("open");
+  }
+
+  function openBoard(lineupId) {
+    var dlg = $("dlg-board");
+    var table = $("board-table");
+    var lineup = null;
+    for (var i = 0; i < LINEUPS.length; i++) {
+      if (LINEUPS[i].id === lineupId) { lineup = LINEUPS[i]; break; }
+    }
+    $("board-title").textContent = "Leaderboard";
+    $("board-sub").textContent = lineup
+      ? lineup.team + (lineup.opponent ? " v " + lineup.opponent : "") + " — first attempts only"
+      : "First attempts only";
+    table.innerHTML = "";
+    var loading = table.insertRow();
+    loading.insertCell().textContent = "Loading…";
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+
+    var who = readWho();
+    fetch(boardUrl("/board?lineup=" + encodeURIComponent(lineupId)
+                   + (who.id ? "&player=" + encodeURIComponent(who.id) : "")))
+      .then(function (r) { return r.json(); })
+      .then(function (data) { paintBoardTable(table, data, who); })
+      .catch(function () {
+        table.innerHTML = "";
+        table.insertRow().insertCell().textContent = "Couldn't reach the leaderboard.";
+      });
+  }
+
+  function paintBoardTable(table, data, who) {
+    table.innerHTML = "";
+    if (!data.top || !data.top.length) {
+      table.insertRow().insertCell().textContent = "Nobody has played this one yet. You're first.";
+      return;
+    }
+    var lastScore = null, place = 0, shown = 0;
+    data.top.forEach(function (row) {
+      shown += 1;
+      /* Equal scores share a place, so a three-way tie reads 1st, 1st, 1st. */
+      if (row.score !== lastScore) { place = shown; lastScore = row.score; }
+      var tr = table.insertRow();
+      if (data.you && data.you.name === row.name && data.you.score === row.score) {
+        tr.className = "you";
+      }
+      var rank = tr.insertCell();
+      rank.className = "rank";
+      rank.textContent = ordinal(place);
+      tr.insertCell().textContent = row.name;
+      var tally = tr.insertCell();
+      tally.className = "tally";
+      tally.textContent = String(row.score);
+    });
+    if (data.you && data.you.rank > shown) {
+      var mine = table.insertRow();
+      mine.className = "you";
+      var r = mine.insertCell();
+      r.className = "rank";
+      r.textContent = ordinal(data.you.rank);
+      mine.insertCell().textContent = data.you.name;
+      var t = mine.insertCell();
+      t.className = "tally";
+      t.textContent = String(data.you.score);
+    }
+  }
+
   function paintRecord(node) {
     var r = readRecord();
     var rate = r.played ? Math.round((r.complete / r.played) * 100) + "%" : "–";
@@ -1126,6 +1418,7 @@ SCRIPT = r"""
     say("");
     $("call-input").value = "";
     startClock();
+    claimToken(game);
     $("call-input").focus();
   }
 
@@ -1150,6 +1443,7 @@ SCRIPT = r"""
     paintResult(game);
     $("controls").hidden = true;
     $("result").hidden = false;
+    offerBoard(game);
   }
 
   function call(event) {
@@ -1559,6 +1853,7 @@ def build(fragment: bool = False) -> str:
     payload = json.dumps(lineups, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     script = SCRIPT.replace("__LINEUPS_DATA__", payload)
     script = script.replace("__PLAYER_FACTS__", player_facts_payload())
+    script = script.replace("__LEADERBOARD__", leaderboard_payload())
 
     if fragment:
         # Artifact hosting supplies the doctype/head/body wrapper itself.
@@ -1607,6 +1902,24 @@ if ("serviceWorker" in navigator) {{
 </body>
 </html>
 """
+
+
+def leaderboard_payload() -> str:
+    """Where the leaderboard lives, or null when there isn't one.
+
+    Built in rather than fetched, so a page with no leaderboard makes no network
+    calls at all. An empty url yields null and the game plays as it always has -
+    which is also what happens on a fresh clone, before anything is deployed.
+    """
+    if not LEADERBOARD.exists():
+        return "null"
+    config = json.loads(LEADERBOARD.read_text(encoding="utf-8"))
+    url = str(config.get("url") or "").strip()
+    if not url:
+        return "null"
+    if not url.startswith("https://"):
+        raise SystemExit(f"leaderboard url must be https, got {url!r}")
+    return json.dumps({"url": url.rstrip("/")})
 
 
 def player_facts_payload() -> str:
