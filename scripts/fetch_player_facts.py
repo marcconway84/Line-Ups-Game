@@ -44,7 +44,7 @@ NATIONAL_TEAM = "Q6979593"
 #: Typed rows via UNION rather than nested OPTIONALs: an OPTIONAL join multiplies
 #: rows together and makes it hard to tell which fact came from which statement.
 FACTS_QUERY = """
-SELECT ?kind ?label ?start WHERE {
+SELECT ?kind ?label ?start ?founded WHERE {
   {
     wd:%(qid)s wdt:P569 ?born.
     BIND("born" AS ?kind)
@@ -63,6 +63,7 @@ SELECT ?kind ?label ?start WHERE {
     ?statement ps:P54 ?item.
     FILTER NOT EXISTS { ?item wdt:P31/wdt:P279* wd:%(national)s. }
     OPTIONAL { ?statement pq:P580 ?start. }
+    OPTIONAL { ?item wdt:P571 ?founded. }
     BIND("club" AS ?kind)
   }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". ?item rdfs:label ?label. }
@@ -138,16 +139,38 @@ FIRST_PLAUSIBLE_AGE = 15
 LAST_PLAUSIBLE_AGE = 45
 
 
-def plausible_spell(born_year: int | None, start: str | None) -> bool:
-    """Whether a club spell starting on this date could belong to this player."""
-    if born_year is None or not start:
-        return True  # nothing to check against; keep it and let review catch it
+def _year(value: str | None) -> int | None:
     try:
-        start_year = int(str(start)[:4])
-    except ValueError:
-        return True
-    age = start_year - born_year
-    return FIRST_PLAUSIBLE_AGE <= age <= LAST_PLAUSIBLE_AGE
+        return int(str(value)[:4])
+    except (TypeError, ValueError):
+        return None
+
+
+def plausible_spell(born_year: int | None, start: str | None,
+                    founded: str | None = None) -> bool:
+    """Whether a club spell could belong to this player.
+
+    Two independent checks, because a bad claim often carries no date at all:
+
+    * the spell must start within a playing age, and
+    * the club must have existed by the time his career ended. Bobby Moore's
+      spurious Midtjylland claim has no start date, so only the second catches it -
+      the club was founded in 1999 and he was born in 1941.
+    """
+    if born_year is None:
+        return True  # nothing to judge against; review is the backstop
+
+    start_year = _year(start)
+    if start_year is not None:
+        age = start_year - born_year
+        if not (FIRST_PLAUSIBLE_AGE <= age <= LAST_PLAUSIBLE_AGE):
+            return False
+
+    founded_year = _year(founded)
+    if founded_year is not None and founded_year > born_year + LAST_PLAUSIBLE_AGE:
+        return False
+
+    return True
 
 
 def is_senior_side(label: str) -> bool:
@@ -244,7 +267,8 @@ def summarise(rows: list[dict]) -> dict:
                 national_sides.append(label)
         elif kind == "club":
             start = row.get("start", {}).get("value")
-            if not plausible_spell(born_year, start):
+            founded = row.get("founded", {}).get("value")
+            if not plausible_spell(born_year, start, founded):
                 if label not in rejected:
                     rejected.append(label)
                 continue

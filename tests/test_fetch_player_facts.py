@@ -19,11 +19,13 @@ fetch = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fetch)
 
 
-def row(kind, label, start=None):
+def row(kind, label, start=None, founded=None):
     """Build a typed SPARQL binding row the way the endpoint returns them."""
     binding = {"kind": {"value": kind}, "label": {"value": label}}
     if start:
         binding["start"] = {"value": start}
+    if founded:
+        binding["founded"] = {"value": founded}
     return binding
 
 
@@ -123,6 +125,21 @@ class TestImplausibleSpells:
     def test_a_club_joined_as_a_child_is_rejected(self):
         facts = fetch.summarise(self.BORN + [row("club", "Somewhere", "1948-01-01T00:00:00Z")])
         assert facts["career"] == []
+
+    def test_an_undated_spell_at_a_club_founded_too_late_is_rejected(self):
+        """The real Bobby Moore case: no start date, so only the club's age catches it."""
+        facts = fetch.summarise(self.BORN + [
+            row("club", "West Ham United F.C.", "1958-01-01T00:00:00Z"),
+            row("club", "FC Midtjylland", founded="1999-01-01T00:00:00Z"),
+        ])
+        assert facts["career"] == ["West Ham United"]
+        assert facts["rejected_spells"] == ["FC Midtjylland"]
+
+    def test_a_club_older_than_the_player_is_fine(self):
+        facts = fetch.summarise(self.BORN + [
+            row("club", "West Ham United F.C.", founded="1895-01-01T00:00:00Z"),
+        ])
+        assert facts["career"] == ["West Ham United"]
 
     def test_spells_are_kept_when_there_is_no_birth_year_to_judge_against(self):
         facts = fetch.summarise([row("club", "FC Midtjylland", "1999-01-01T00:00:00Z")])
