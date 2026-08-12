@@ -3128,6 +3128,1505 @@
           ]
         }
       ]
+    },
+    {
+      "id": "ucl-2005-final-milan",
+      "team": "AC Milan",
+      "opponent": "Liverpool",
+      "score": "3-3 (2-3 pens)",
+      "competition": "UEFA Champions League Final",
+      "season": "2004-05",
+      "date": "2005-05-25",
+      "venue": "Atatürk Stadium, Istanbul",
+      "formation": [
+        4,
+        4,
+        2
+      ],
+      "tags": [
+        "club",
+        "europe",
+        "2000s"
+      ],
+      "blurb": "Three up at half-time in Istanbul, and beaten. Maldini scored inside a minute.",
+      "source_url": "https://en.wikipedia.org/wiki/2005_UEFA_Champions_League_final",
+      "players": [
+        {
+          "name": "Dida",
+          "pos": "GK",
+          "accepts": [
+            "nelson dida"
+          ]
+        },
+        {
+          "name": "Paolo Maldini",
+          "pos": "LB"
+        },
+        {
+          "name": "Alessandro Nesta",
+          "pos": "CB"
+        },
+        {
+          "name": "Jaap Stam",
+          "pos": "CB"
+        },
+        {
+          "name": "Cafu",
+          "pos": "RB"
+        },
+        {
+          "name": "Kaká",
+          "pos": "LM",
+          "accepts": [
+            "ricardo kaka"
+          ]
+        },
+        {
+          "name": "Andrea Pirlo",
+          "pos": "CM"
+        },
+        {
+          "name": "Gennaro Gattuso",
+          "pos": "CM",
+          "accepts": [
+            "rino gattuso"
+          ]
+        },
+        {
+          "name": "Clarence Seedorf",
+          "pos": "RM"
+        },
+        {
+          "name": "Hernán Crespo",
+          "pos": "ST"
+        },
+        {
+          "name": "Andriy Shevchenko",
+          "pos": "ST",
+          "accepts": [
+            "sheva"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ucl-1999-final-bayern",
+      "team": "Bayern Munich",
+      "opponent": "Manchester United",
+      "score": "1-2",
+      "competition": "UEFA Champions League Final",
+      "season": "1998-99",
+      "date": "1999-05-26",
+      "venue": "Camp Nou, Barcelona",
+      "formation": [
+        3,
+        5,
+        2
+      ],
+      "tags": [
+        "club",
+        "europe",
+        "1990s"
+      ],
+      "blurb": "Ahead from the sixth minute, and beaten by two goals in injury time. Both hit the woodwork before that.",
+      "source_url": "https://en.wikipedia.org/wiki/1999_UEFA_Champions_League_final",
+      "players": [
+        {
+          "name": "Oliver Kahn",
+          "pos": "GK"
+        },
+        {
+          "name": "Thomas Linke",
+          "pos": "CB"
+        },
+        {
+          "name": "Lothar Matthäus",
+          "pos": "CB"
+        },
+        {
+          "name": "Samuel Kuffour",
+          "pos": "CB"
+        },
+        {
+          "name": "Michael Tarnat",
+          "pos": "LWB"
+        },
+        {
+          "name": "Stefan Effenberg",
+          "pos": "CM"
+        },
+        {
+          "name": "Jens Jeremies",
+          "pos": "CM"
+        },
+        {
+          "name": "Mario Basler",
+          "pos": "CM"
+        },
+        {
+          "name": "Markus Babbel",
+          "pos": "RWB"
+        },
+        {
+          "name": "Carsten Jancker",
+          "pos": "ST"
+        },
+        {
+          "name": "Alexander Zickler",
+          "pos": "ST"
+        }
+      ]
+    },
+    {
+      "id": "wc-2006-final-france",
+      "team": "France",
+      "opponent": "Italy",
+      "score": "1-1 (3-5 pens)",
+      "competition": "FIFA World Cup Final",
+      "season": "2006",
+      "date": "2006-07-09",
+      "venue": "Olympiastadion, Berlin",
+      "formation": [
+        4,
+        2,
+        3,
+        1
+      ],
+      "tags": [
+        "international",
+        "2000s"
+      ],
+      "blurb": "Zidane scored a panenka and was sent off for a headbutt in his last professional match.",
+      "source_url": "https://en.wikipedia.org/wiki/2006_FIFA_World_Cup_final",
+      "players": [
+        {
+          "name": "Fabien Barthez",
+          "pos": "GK"
+        },
+        {
+          "name": "Éric Abidal",
+          "pos": "LB"
+        },
+        {
+          "name": "William Gallas",
+          "pos": "CB"
+        },
+        {
+          "name": "Lilian Thuram",
+          "pos": "CB"
+        },
+        {
+          "name": "Willy Sagnol",
+          "pos": "RB"
+        },
+        {
+          "name": "Patrick Vieira",
+          "pos": "CDM"
+        },
+        {
+          "name": "Claude Makélélé",
+          "pos": "CDM"
+        },
+        {
+          "name": "Florent Malouda",
+          "pos": "LM"
+        },
+        {
+          "name": "Zinédine Zidane",
+          "pos": "AM",
+          "accepts": [
+            "zizou",
+            "zidane"
+          ]
+        },
+        {
+          "name": "Franck Ribéry",
+          "pos": "RM"
+        },
+        {
+          "name": "Thierry Henry",
+          "pos": "ST",
+          "accepts": [
+            "titi"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wc-2010-final-netherlands",
+      "team": "Netherlands",
+      "opponent": "Spain",
+      "score": "0-1 (aet)",
+      "competition": "FIFA World Cup Final",
+      "season": "2010",
+      "date": "2010-07-11",
+      "venue": "Soccer City, Johannesburg",
+      "formation": [
+        4,
+        2,
+        3,
+        1
+      ],
+      "tags": [
+        "international",
+        "2010s"
+      ],
+      "blurb": "A bad-tempered final remembered for De Jong's boot in Alonso's chest and Robben's miss.",
+      "source_url": "https://en.wikipedia.org/wiki/2010_FIFA_World_Cup_final",
+      "players": [
+        {
+          "name": "Maarten Stekelenburg",
+          "pos": "GK"
+        },
+        {
+          "name": "Giovanni van Bronckhorst",
+          "pos": "LB",
+          "accepts": [
+            "van bronckhorst"
+          ]
+        },
+        {
+          "name": "Joris Mathijsen",
+          "pos": "CB"
+        },
+        {
+          "name": "John Heitinga",
+          "pos": "CB"
+        },
+        {
+          "name": "Gregory van der Wiel",
+          "pos": "RB"
+        },
+        {
+          "name": "Mark van Bommel",
+          "pos": "CDM"
+        },
+        {
+          "name": "Nigel de Jong",
+          "pos": "CDM"
+        },
+        {
+          "name": "Dirk Kuyt",
+          "pos": "LM"
+        },
+        {
+          "name": "Wesley Sneijder",
+          "pos": "AM"
+        },
+        {
+          "name": "Arjen Robben",
+          "pos": "RM"
+        },
+        {
+          "name": "Robin van Persie",
+          "pos": "ST",
+          "accepts": [
+            "rvp"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wc-2018-final-croatia",
+      "team": "Croatia",
+      "opponent": "France",
+      "score": "2-4",
+      "competition": "FIFA World Cup Final",
+      "season": "2018",
+      "date": "2018-07-15",
+      "venue": "Luzhniki Stadium, Moscow",
+      "formation": [
+        4,
+        2,
+        3,
+        1
+      ],
+      "tags": [
+        "international",
+        "2010s"
+      ],
+      "blurb": "A first final for a nation of four million, after three straight extra-time knockouts.",
+      "source_url": "https://en.wikipedia.org/wiki/2018_FIFA_World_Cup_final",
+      "players": [
+        {
+          "name": "Danijel Subašić",
+          "pos": "GK"
+        },
+        {
+          "name": "Ivan Strinić",
+          "pos": "LB"
+        },
+        {
+          "name": "Domagoj Vida",
+          "pos": "CB"
+        },
+        {
+          "name": "Dejan Lovren",
+          "pos": "CB"
+        },
+        {
+          "name": "Šime Vrsaljko",
+          "pos": "RB"
+        },
+        {
+          "name": "Marcelo Brozović",
+          "pos": "CDM"
+        },
+        {
+          "name": "Ivan Rakitić",
+          "pos": "CDM"
+        },
+        {
+          "name": "Ivan Perišić",
+          "pos": "LM"
+        },
+        {
+          "name": "Luka Modrić",
+          "pos": "AM"
+        },
+        {
+          "name": "Ante Rebić",
+          "pos": "RM"
+        },
+        {
+          "name": "Mario Mandžukić",
+          "pos": "ST"
+        }
+      ]
+    },
+    {
+      "id": "wc-2022-final-france",
+      "team": "France",
+      "opponent": "Argentina",
+      "score": "3-3 (2-4 pens)",
+      "competition": "FIFA World Cup Final",
+      "season": "2022",
+      "date": "2022-12-18",
+      "venue": "Lusail Stadium, Lusail",
+      "formation": [
+        4,
+        2,
+        3,
+        1
+      ],
+      "tags": [
+        "international",
+        "2020s"
+      ],
+      "blurb": "Two down and going nowhere, then Mbappé scored a hat-trick and it still was not enough.",
+      "source_url": "https://en.wikipedia.org/wiki/2022_FIFA_World_Cup_final",
+      "players": [
+        {
+          "name": "Hugo Lloris",
+          "pos": "GK"
+        },
+        {
+          "name": "Theo Hernández",
+          "pos": "LB"
+        },
+        {
+          "name": "Dayot Upamecano",
+          "pos": "CB"
+        },
+        {
+          "name": "Raphaël Varane",
+          "pos": "CB"
+        },
+        {
+          "name": "Jules Koundé",
+          "pos": "RB"
+        },
+        {
+          "name": "Aurélien Tchouaméni",
+          "pos": "CDM"
+        },
+        {
+          "name": "Adrien Rabiot",
+          "pos": "CDM"
+        },
+        {
+          "name": "Kylian Mbappé",
+          "pos": "LM"
+        },
+        {
+          "name": "Antoine Griezmann",
+          "pos": "AM"
+        },
+        {
+          "name": "Ousmane Dembélé",
+          "pos": "RM"
+        },
+        {
+          "name": "Olivier Giroud",
+          "pos": "ST"
+        }
+      ]
+    },
+    {
+      "id": "wc-2014-final-argentina",
+      "team": "Argentina",
+      "opponent": "Germany",
+      "score": "0-1 (aet)",
+      "competition": "FIFA World Cup Final",
+      "season": "2014",
+      "date": "2014-07-13",
+      "venue": "Maracanã, Rio de Janeiro",
+      "formation": [
+        4,
+        3,
+        3
+      ],
+      "tags": [
+        "international",
+        "2010s"
+      ],
+      "blurb": "Higuaín missed a one-on-one, Palacio lifted one wide, and Götze settled it late.",
+      "source_url": "https://en.wikipedia.org/wiki/2014_FIFA_World_Cup_final",
+      "players": [
+        {
+          "name": "Sergio Romero",
+          "pos": "GK"
+        },
+        {
+          "name": "Marcos Rojo",
+          "pos": "LB"
+        },
+        {
+          "name": "Ezequiel Garay",
+          "pos": "CB"
+        },
+        {
+          "name": "Martín Demichelis",
+          "pos": "CB"
+        },
+        {
+          "name": "Pablo Zabaleta",
+          "pos": "RB"
+        },
+        {
+          "name": "Enzo Pérez",
+          "pos": "CM"
+        },
+        {
+          "name": "Javier Mascherano",
+          "pos": "CM",
+          "accepts": [
+            "masche"
+          ]
+        },
+        {
+          "name": "Lucas Biglia",
+          "pos": "CM"
+        },
+        {
+          "name": "Ezequiel Lavezzi",
+          "pos": "LW"
+        },
+        {
+          "name": "Gonzalo Higuaín",
+          "pos": "CF",
+          "accepts": [
+            "pipita"
+          ]
+        },
+        {
+          "name": "Lionel Messi",
+          "pos": "RW",
+          "accepts": [
+            "leo messi"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ucl-2009-final-manutd",
+      "team": "Manchester United",
+      "opponent": "Barcelona",
+      "score": "0-2",
+      "competition": "UEFA Champions League Final",
+      "season": "2008-09",
+      "date": "2009-05-27",
+      "venue": "Stadio Olimpico, Rome",
+      "formation": [
+        4,
+        4,
+        2
+      ],
+      "tags": [
+        "club",
+        "europe",
+        "2000s"
+      ],
+      "blurb": "Holders, and outplayed. Eto'o scored inside ten minutes and Messi headed the second.",
+      "source_url": "https://en.wikipedia.org/wiki/2009_UEFA_Champions_League_final",
+      "players": [
+        {
+          "name": "Edwin van der Sar",
+          "pos": "GK",
+          "accepts": [
+            "vandersar"
+          ]
+        },
+        {
+          "name": "Patrice Evra",
+          "pos": "LB"
+        },
+        {
+          "name": "Nemanja Vidić",
+          "pos": "CB"
+        },
+        {
+          "name": "Rio Ferdinand",
+          "pos": "CB"
+        },
+        {
+          "name": "John O'Shea",
+          "pos": "RB"
+        },
+        {
+          "name": "Ryan Giggs",
+          "pos": "LM"
+        },
+        {
+          "name": "Michael Carrick",
+          "pos": "CM"
+        },
+        {
+          "name": "Anderson",
+          "pos": "CM"
+        },
+        {
+          "name": "Ji-sung Park",
+          "pos": "RM",
+          "accepts": [
+            "park ji sung",
+            "park"
+          ]
+        },
+        {
+          "name": "Wayne Rooney",
+          "pos": "ST",
+          "accepts": [
+            "wazza"
+          ]
+        },
+        {
+          "name": "Cristiano Ronaldo",
+          "pos": "ST",
+          "accepts": [
+            "cr7",
+            "cristiano"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ucl-2017-final-realmadrid",
+      "team": "Real Madrid",
+      "opponent": "Juventus",
+      "score": "4-1",
+      "competition": "UEFA Champions League Final",
+      "season": "2016-17",
+      "date": "2017-06-03",
+      "venue": "Millennium Stadium, Cardiff",
+      "formation": [
+        4,
+        3,
+        3
+      ],
+      "tags": [
+        "club",
+        "europe",
+        "2010s"
+      ],
+      "blurb": "The first side to retain the Champions League. Ronaldo scored twice.",
+      "source_url": "https://en.wikipedia.org/wiki/2017_UEFA_Champions_League_final",
+      "players": [
+        {
+          "name": "Keylor Navas",
+          "pos": "GK"
+        },
+        {
+          "name": "Marcelo",
+          "pos": "LB"
+        },
+        {
+          "name": "Sergio Ramos",
+          "pos": "CB"
+        },
+        {
+          "name": "Raphaël Varane",
+          "pos": "CB"
+        },
+        {
+          "name": "Dani Carvajal",
+          "pos": "RB"
+        },
+        {
+          "name": "Toni Kroos",
+          "pos": "CM"
+        },
+        {
+          "name": "Casemiro",
+          "pos": "CM"
+        },
+        {
+          "name": "Luka Modrić",
+          "pos": "CM"
+        },
+        {
+          "name": "Cristiano Ronaldo",
+          "pos": "LW",
+          "accepts": [
+            "cr7",
+            "cristiano"
+          ]
+        },
+        {
+          "name": "Karim Benzema",
+          "pos": "CF"
+        },
+        {
+          "name": "Isco",
+          "pos": "RW"
+        }
+      ]
+    },
+    {
+      "id": "ucl-2017-final-juventus",
+      "team": "Juventus",
+      "opponent": "Real Madrid",
+      "score": "1-4",
+      "competition": "UEFA Champions League Final",
+      "season": "2016-17",
+      "date": "2017-06-03",
+      "venue": "Millennium Stadium, Cardiff",
+      "formation": [
+        4,
+        2,
+        3,
+        1
+      ],
+      "tags": [
+        "club",
+        "europe",
+        "2010s"
+      ],
+      "blurb": "Mandžukić's overhead kick made it 1-1 before Madrid scored three in twenty-four minutes.",
+      "source_url": "https://en.wikipedia.org/wiki/2017_UEFA_Champions_League_final",
+      "players": [
+        {
+          "name": "Gianluigi Buffon",
+          "pos": "GK",
+          "accepts": [
+            "gigi buffon"
+          ]
+        },
+        {
+          "name": "Alex Sandro",
+          "pos": "LB"
+        },
+        {
+          "name": "Giorgio Chiellini",
+          "pos": "CB"
+        },
+        {
+          "name": "Leonardo Bonucci",
+          "pos": "CB"
+        },
+        {
+          "name": "Dani Alves",
+          "pos": "RB"
+        },
+        {
+          "name": "Sami Khedira",
+          "pos": "CDM"
+        },
+        {
+          "name": "Miralem Pjanić",
+          "pos": "CDM"
+        },
+        {
+          "name": "Mario Mandžukić",
+          "pos": "LM"
+        },
+        {
+          "name": "Paulo Dybala",
+          "pos": "AM"
+        },
+        {
+          "name": "Juan Cuadrado",
+          "pos": "RM"
+        },
+        {
+          "name": "Gonzalo Higuaín",
+          "pos": "ST",
+          "accepts": [
+            "pipita"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ucl-2024-final-realmadrid",
+      "team": "Real Madrid",
+      "opponent": "Borussia Dortmund",
+      "score": "2-0",
+      "competition": "UEFA Champions League Final",
+      "season": "2023-24",
+      "date": "2024-06-01",
+      "venue": "Wembley Stadium, London",
+      "formation": [
+        4,
+        3,
+        3
+      ],
+      "tags": [
+        "club",
+        "europe",
+        "2020s"
+      ],
+      "blurb": "A fifteenth European Cup, and Kroos's last match for the club.",
+      "source_url": "https://en.wikipedia.org/wiki/2024_UEFA_Champions_League_final",
+      "players": [
+        {
+          "name": "Thibaut Courtois",
+          "pos": "GK"
+        },
+        {
+          "name": "Ferland Mendy",
+          "pos": "LB"
+        },
+        {
+          "name": "Nacho",
+          "pos": "CB"
+        },
+        {
+          "name": "Antonio Rüdiger",
+          "pos": "CB"
+        },
+        {
+          "name": "Dani Carvajal",
+          "pos": "RB"
+        },
+        {
+          "name": "Eduardo Camavinga",
+          "pos": "CM"
+        },
+        {
+          "name": "Toni Kroos",
+          "pos": "CM"
+        },
+        {
+          "name": "Federico Valverde",
+          "pos": "CM",
+          "accepts": [
+            "fede"
+          ]
+        },
+        {
+          "name": "Vinícius Júnior",
+          "pos": "LW",
+          "accepts": [
+            "vini jr",
+            "vinicius"
+          ]
+        },
+        {
+          "name": "Jude Bellingham",
+          "pos": "CF"
+        },
+        {
+          "name": "Rodrygo",
+          "pos": "RW"
+        }
+      ]
+    },
+    {
+      "id": "ucl-2002-final-realmadrid",
+      "team": "Real Madrid",
+      "opponent": "Bayer Leverkusen",
+      "score": "2-1",
+      "competition": "UEFA Champions League Final",
+      "season": "2001-02",
+      "date": "2002-05-15",
+      "venue": "Hampden Park, Glasgow",
+      "formation": [
+        4,
+        4,
+        2
+      ],
+      "tags": [
+        "club",
+        "europe",
+        "2000s"
+      ],
+      "blurb": "Zidane's left-foot volley off Roberto Carlos's looping cross, still the most replayed goal in the competition's history.",
+      "source_url": "https://en.wikipedia.org/wiki/2002_UEFA_Champions_League_final",
+      "players": [
+        {
+          "name": "César Sánchez",
+          "pos": "GK",
+          "accepts": [
+            "cesar"
+          ]
+        },
+        {
+          "name": "Roberto Carlos",
+          "pos": "LB"
+        },
+        {
+          "name": "Fernando Hierro",
+          "pos": "CB"
+        },
+        {
+          "name": "Iván Helguera",
+          "pos": "CB"
+        },
+        {
+          "name": "Míchel Salgado",
+          "pos": "RB"
+        },
+        {
+          "name": "Zinédine Zidane",
+          "pos": "LM",
+          "accepts": [
+            "zizou",
+            "zidane"
+          ]
+        },
+        {
+          "name": "Claude Makélélé",
+          "pos": "CM"
+        },
+        {
+          "name": "Steve McManaman",
+          "pos": "CM",
+          "accepts": [
+            "macca"
+          ]
+        },
+        {
+          "name": "Luís Figo",
+          "pos": "RM"
+        },
+        {
+          "name": "Raúl",
+          "pos": "ST",
+          "accepts": [
+            "raul gonzalez"
+          ]
+        },
+        {
+          "name": "Fernando Morientes",
+          "pos": "ST"
+        }
+      ]
+    },
+    {
+      "id": "ucl-1994-final-milan",
+      "team": "AC Milan",
+      "opponent": "Barcelona",
+      "score": "4-0",
+      "competition": "UEFA Champions League Final",
+      "season": "1993-94",
+      "date": "1994-05-18",
+      "venue": "Olympic Stadium, Athens",
+      "formation": [
+        4,
+        4,
+        2
+      ],
+      "tags": [
+        "club",
+        "europe",
+        "1990s"
+      ],
+      "blurb": "Barcelona's dream team taken apart. Baresi and Costacurta were both suspended.",
+      "source_url": "https://en.wikipedia.org/wiki/1994_UEFA_Champions_League_final",
+      "players": [
+        {
+          "name": "Sebastiano Rossi",
+          "pos": "GK"
+        },
+        {
+          "name": "Paolo Maldini",
+          "pos": "LB"
+        },
+        {
+          "name": "Filippo Galli",
+          "pos": "CB"
+        },
+        {
+          "name": "Christian Panucci",
+          "pos": "CB"
+        },
+        {
+          "name": "Mauro Tassotti",
+          "pos": "RB"
+        },
+        {
+          "name": "Roberto Donadoni",
+          "pos": "LM"
+        },
+        {
+          "name": "Marcel Desailly",
+          "pos": "CM"
+        },
+        {
+          "name": "Demetrio Albertini",
+          "pos": "CM"
+        },
+        {
+          "name": "Zvonimir Boban",
+          "pos": "RM"
+        },
+        {
+          "name": "Daniele Massaro",
+          "pos": "ST"
+        },
+        {
+          "name": "Dejan Savićević",
+          "pos": "ST"
+        }
+      ]
+    },
+    {
+      "id": "ucl-1997-final-dortmund",
+      "team": "Borussia Dortmund",
+      "opponent": "Juventus",
+      "score": "3-1",
+      "competition": "UEFA Champions League Final",
+      "season": "1996-97",
+      "date": "1997-05-28",
+      "venue": "Olympiastadion, Munich",
+      "formation": [
+        3,
+        5,
+        2
+      ],
+      "tags": [
+        "club",
+        "europe",
+        "1990s"
+      ],
+      "blurb": "Riedle scored twice, then Ricken lobbed Peruzzi with his first touch, sixteen seconds after coming on.",
+      "source_url": "https://en.wikipedia.org/wiki/1997_UEFA_Champions_League_final",
+      "players": [
+        {
+          "name": "Stefan Klos",
+          "pos": "GK"
+        },
+        {
+          "name": "Jürgen Kohler",
+          "pos": "CB"
+        },
+        {
+          "name": "Matthias Sammer",
+          "pos": "CB"
+        },
+        {
+          "name": "Wolfgang Feiersinger",
+          "pos": "CB"
+        },
+        {
+          "name": "Stefan Reuter",
+          "pos": "LM"
+        },
+        {
+          "name": "Paul Lambert",
+          "pos": "CM"
+        },
+        {
+          "name": "Paulo Sousa",
+          "pos": "CM"
+        },
+        {
+          "name": "Andreas Möller",
+          "pos": "CM"
+        },
+        {
+          "name": "Jörg Heinrich",
+          "pos": "RM"
+        },
+        {
+          "name": "Karl-Heinz Riedle",
+          "pos": "ST"
+        },
+        {
+          "name": "Stéphane Chapuisat",
+          "pos": "ST"
+        }
+      ]
+    },
+    {
+      "id": "wc-1974-final-westgermany",
+      "team": "West Germany",
+      "opponent": "Netherlands",
+      "score": "2-1",
+      "competition": "FIFA World Cup Final",
+      "season": "1974",
+      "date": "1974-07-07",
+      "venue": "Olympiastadion, Munich",
+      "formation": [
+        4,
+        4,
+        2
+      ],
+      "tags": [
+        "international",
+        "1970s"
+      ],
+      "blurb": "The Dutch scored from the spot before a German player had touched the ball, and still lost.",
+      "source_url": "https://en.wikipedia.org/wiki/1974_FIFA_World_Cup_final",
+      "players": [
+        {
+          "name": "Sepp Maier",
+          "pos": "GK"
+        },
+        {
+          "name": "Paul Breitner",
+          "pos": "LB"
+        },
+        {
+          "name": "Franz Beckenbauer",
+          "pos": "CB",
+          "accepts": [
+            "der kaiser"
+          ]
+        },
+        {
+          "name": "Hans-Georg Schwarzenbeck",
+          "pos": "CB"
+        },
+        {
+          "name": "Berti Vogts",
+          "pos": "RB"
+        },
+        {
+          "name": "Bernd Hölzenbein",
+          "pos": "LM"
+        },
+        {
+          "name": "Wolfgang Overath",
+          "pos": "CM"
+        },
+        {
+          "name": "Rainer Bonhof",
+          "pos": "CM"
+        },
+        {
+          "name": "Jürgen Grabowski",
+          "pos": "RM"
+        },
+        {
+          "name": "Gerd Müller",
+          "pos": "ST",
+          "accepts": [
+            "gerd mueller"
+          ]
+        },
+        {
+          "name": "Uli Hoeneß",
+          "pos": "ST",
+          "accepts": [
+            "hoeness"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "euro-2000-final-france",
+      "team": "France",
+      "opponent": "Italy",
+      "score": "2-1 (aet)",
+      "competition": "UEFA European Championship Final",
+      "season": "2000",
+      "date": "2000-07-02",
+      "venue": "De Kuip, Rotterdam",
+      "formation": [
+        4,
+        2,
+        3,
+        1
+      ],
+      "tags": [
+        "international",
+        "2000s"
+      ],
+      "blurb": "Wiltord equalised in the last seconds of injury time and Trezeguet won it with a golden goal.",
+      "source_url": "https://en.wikipedia.org/wiki/UEFA_Euro_2000_Final",
+      "players": [
+        {
+          "name": "Fabien Barthez",
+          "pos": "GK"
+        },
+        {
+          "name": "Bixente Lizarazu",
+          "pos": "LB"
+        },
+        {
+          "name": "Marcel Desailly",
+          "pos": "CB"
+        },
+        {
+          "name": "Laurent Blanc",
+          "pos": "CB"
+        },
+        {
+          "name": "Lilian Thuram",
+          "pos": "RB"
+        },
+        {
+          "name": "Didier Deschamps",
+          "pos": "CDM"
+        },
+        {
+          "name": "Patrick Vieira",
+          "pos": "CDM"
+        },
+        {
+          "name": "Christophe Dugarry",
+          "pos": "LM"
+        },
+        {
+          "name": "Zinédine Zidane",
+          "pos": "AM",
+          "accepts": [
+            "zizou",
+            "zidane"
+          ]
+        },
+        {
+          "name": "Youri Djorkaeff",
+          "pos": "RM"
+        },
+        {
+          "name": "Thierry Henry",
+          "pos": "ST",
+          "accepts": [
+            "titi"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "euro-2008-final-spain",
+      "team": "Spain",
+      "opponent": "Germany",
+      "score": "1-0",
+      "competition": "UEFA European Championship Final",
+      "season": "2008",
+      "date": "2008-06-29",
+      "venue": "Ernst-Happel-Stadion, Vienna",
+      "formation": [
+        4,
+        4,
+        1,
+        1
+      ],
+      "tags": [
+        "international",
+        "2000s"
+      ],
+      "blurb": "A first trophy in forty-four years, and the start of everything that followed. Torres scored the only goal.",
+      "source_url": "https://en.wikipedia.org/wiki/UEFA_Euro_2008_Final",
+      "players": [
+        {
+          "name": "Iker Casillas",
+          "pos": "GK"
+        },
+        {
+          "name": "Joan Capdevila",
+          "pos": "LB"
+        },
+        {
+          "name": "Carles Puyol",
+          "pos": "CB"
+        },
+        {
+          "name": "Carlos Marchena",
+          "pos": "CB"
+        },
+        {
+          "name": "Sergio Ramos",
+          "pos": "RB"
+        },
+        {
+          "name": "Andrés Iniesta",
+          "pos": "LM"
+        },
+        {
+          "name": "Marcos Senna",
+          "pos": "CM"
+        },
+        {
+          "name": "Xavi",
+          "pos": "CM",
+          "accepts": [
+            "xavi hernandez"
+          ]
+        },
+        {
+          "name": "David Silva",
+          "pos": "RM"
+        },
+        {
+          "name": "Cesc Fàbregas",
+          "pos": "AM",
+          "accepts": [
+            "cesc"
+          ]
+        },
+        {
+          "name": "Fernando Torres",
+          "pos": "ST",
+          "accepts": [
+            "el nino"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "euro-2016-final-portugal",
+      "team": "Portugal",
+      "opponent": "France",
+      "score": "1-0 (aet)",
+      "competition": "UEFA European Championship Final",
+      "season": "2016",
+      "date": "2016-07-10",
+      "venue": "Stade de France, Saint-Denis",
+      "formation": [
+        4,
+        4,
+        2
+      ],
+      "tags": [
+        "international",
+        "2010s"
+      ],
+      "blurb": "Ronaldo went off injured after twenty-five minutes and spent extra time coaching from the touchline. Éder won it.",
+      "source_url": "https://en.wikipedia.org/wiki/UEFA_Euro_2016_Final",
+      "players": [
+        {
+          "name": "Rui Patrício",
+          "pos": "GK"
+        },
+        {
+          "name": "Raphaël Guerreiro",
+          "pos": "LB"
+        },
+        {
+          "name": "José Fonte",
+          "pos": "CB"
+        },
+        {
+          "name": "Pepe",
+          "pos": "CB"
+        },
+        {
+          "name": "Cédric Soares",
+          "pos": "RB",
+          "accepts": [
+            "cedric"
+          ]
+        },
+        {
+          "name": "João Mário",
+          "pos": "LM"
+        },
+        {
+          "name": "William Carvalho",
+          "pos": "CM"
+        },
+        {
+          "name": "Adrien Silva",
+          "pos": "CM"
+        },
+        {
+          "name": "Renato Sanches",
+          "pos": "RM"
+        },
+        {
+          "name": "Cristiano Ronaldo",
+          "pos": "ST",
+          "accepts": [
+            "cr7",
+            "cristiano"
+          ]
+        },
+        {
+          "name": "Nani",
+          "pos": "ST"
+        }
+      ]
+    },
+    {
+      "id": "ucl-2019-semi-liverpool",
+      "team": "Liverpool",
+      "opponent": "Barcelona",
+      "score": "4-0",
+      "competition": "UEFA Champions League Semi-Final",
+      "season": "2018-19",
+      "date": "2019-05-07",
+      "venue": "Anfield, Liverpool",
+      "formation": [
+        4,
+        3,
+        3
+      ],
+      "tags": [
+        "club",
+        "europe",
+        "2010s"
+      ],
+      "blurb": "Three down from the first leg and without Salah and Firmino. Origi scored twice, the second from Alexander-Arnold's corner taken quickly.",
+      "source_url": "https://en.wikipedia.org/wiki/2019_UEFA_Champions_League_semi-finals",
+      "players": [
+        {
+          "name": "Alisson",
+          "pos": "GK",
+          "accepts": [
+            "alisson becker",
+            "becker"
+          ]
+        },
+        {
+          "name": "Andrew Robertson",
+          "pos": "LB",
+          "accepts": [
+            "andy robertson",
+            "robbo"
+          ]
+        },
+        {
+          "name": "Virgil van Dijk",
+          "pos": "CB",
+          "accepts": [
+            "vvd",
+            "vandijk"
+          ]
+        },
+        {
+          "name": "Joël Matip",
+          "pos": "CB"
+        },
+        {
+          "name": "Trent Alexander-Arnold",
+          "pos": "RB",
+          "accepts": [
+            "trent",
+            "taa"
+          ]
+        },
+        {
+          "name": "James Milner",
+          "pos": "CM",
+          "accepts": [
+            "milly"
+          ]
+        },
+        {
+          "name": "Fabinho",
+          "pos": "CM"
+        },
+        {
+          "name": "Jordan Henderson",
+          "pos": "CM",
+          "accepts": [
+            "hendo"
+          ]
+        },
+        {
+          "name": "Sadio Mané",
+          "pos": "LW"
+        },
+        {
+          "name": "Divock Origi",
+          "pos": "CF"
+        },
+        {
+          "name": "Xherdan Shaqiri",
+          "pos": "RW"
+        }
+      ]
+    },
+    {
+      "id": "laliga-2010-clasico-barcelona",
+      "team": "Barcelona",
+      "opponent": "Real Madrid",
+      "score": "5-0",
+      "competition": "La Liga",
+      "season": "2010-11",
+      "date": "2010-11-29",
+      "venue": "Camp Nou, Barcelona",
+      "formation": [
+        4,
+        3,
+        3
+      ],
+      "tags": [
+        "club",
+        "spain",
+        "2010s"
+      ],
+      "blurb": "The manita. Guardiola's side against Mourinho's, and a five-goal exhibition.",
+      "source_url": "https://en.wikipedia.org/wiki/2010%E2%80%9311_FC_Barcelona_season",
+      "players": [
+        {
+          "name": "Víctor Valdés",
+          "pos": "GK"
+        },
+        {
+          "name": "Éric Abidal",
+          "pos": "LB"
+        },
+        {
+          "name": "Gerard Piqué",
+          "pos": "CB"
+        },
+        {
+          "name": "Carles Puyol",
+          "pos": "CB"
+        },
+        {
+          "name": "Dani Alves",
+          "pos": "RB"
+        },
+        {
+          "name": "Andrés Iniesta",
+          "pos": "CM"
+        },
+        {
+          "name": "Sergio Busquets",
+          "pos": "CM"
+        },
+        {
+          "name": "Xavi",
+          "pos": "CM",
+          "accepts": [
+            "xavi hernandez"
+          ]
+        },
+        {
+          "name": "David Villa",
+          "pos": "LW"
+        },
+        {
+          "name": "Lionel Messi",
+          "pos": "CF",
+          "accepts": [
+            "leo messi"
+          ]
+        },
+        {
+          "name": "Pedro",
+          "pos": "RW",
+          "accepts": [
+            "pedro rodriguez"
+          ]
+        }
+      ]
     }
   ]
 }
