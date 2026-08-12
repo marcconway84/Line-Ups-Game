@@ -27,6 +27,7 @@ DATASET = REPO_ROOT / "data" / "lineups.json"
 #: in which case the sourced clues simply are not offered.
 PLAYER_FACTS = REPO_ROOT / "data" / "player_facts.json"
 LEADERBOARD = REPO_ROOT / "data" / "leaderboard.json"
+DAILY = REPO_ROOT / "data" / "daily.json"
 DEFAULT_OUT = REPO_ROOT / "dist" / "lineups.html"
 
 TITLE = "Line-Ups &mdash; name the missing players"
@@ -1427,9 +1428,23 @@ SCRIPT = r"""
           "quick:" + Math.random(), "quick");
   }
 
+  /* Days with a chosen puzzle. Everything else falls to the hash, which spreads
+     evenly across the archive but has no sense of occasion. */
+  var DAILY_PICKS = __DAILY__;
+
+  function dailyLineup(day) {
+    var chosen = DAILY_PICKS[day];
+    if (chosen) {
+      for (var i = 0; i < LINEUPS.length; i++) {
+        if (LINEUPS[i].id === chosen) return LINEUPS[i];
+      }
+    }
+    return LINEUPS[hashSeed(day) % LINEUPS.length];
+  }
+
   function startDaily() {
     var day = today();
-    begin(LINEUPS[hashSeed(day) % LINEUPS.length], "medium", "daily:" + day, "daily");
+    begin(dailyLineup(day), "medium", "daily:" + day, "daily");
   }
 
   function finish(how) {
@@ -1854,6 +1869,7 @@ def build(fragment: bool = False) -> str:
     script = SCRIPT.replace("__LINEUPS_DATA__", payload)
     script = script.replace("__PLAYER_FACTS__", player_facts_payload())
     script = script.replace("__LEADERBOARD__", leaderboard_payload())
+    script = script.replace("__DAILY__", daily_payload({e["id"] for e in lineups}))
 
     if fragment:
         # Artifact hosting supplies the doctype/head/body wrapper itself.
@@ -1902,6 +1918,23 @@ if ("serviceWorker" in navigator) {{
 </body>
 </html>
 """
+
+
+def daily_payload(lineup_ids: set[str]) -> str:
+    """Days whose daily puzzle is chosen by hand rather than left to the hash.
+
+    The hash spreads the daily evenly across the archive, which is right most of the
+    time but has no sense of occasion - it will happily open with a 1974 World Cup
+    final on a day that wanted a league game. This is the override, and it is checked
+    against the archive so a mistyped id fails the build rather than a day.
+    """
+    if not DAILY.exists():
+        return "{}"
+    schedule = json.loads(DAILY.read_text(encoding="utf-8")).get("schedule", {})
+    for day, lineup_id in schedule.items():
+        if lineup_id not in lineup_ids:
+            raise SystemExit(f"daily schedule for {day} names an unknown lineup: {lineup_id!r}")
+    return json.dumps(schedule, sort_keys=True)
 
 
 def leaderboard_payload() -> str:

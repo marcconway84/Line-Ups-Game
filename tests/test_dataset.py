@@ -137,3 +137,28 @@ def test_ids_and_names_are_normalised_consistently(dataset):
 def test_required_fields_present(dataset, field):
     for lineup in dataset["lineups"]:
         assert lineup.get(field), f"{lineup['id']} is missing {field}"
+
+
+class TestTheDailySchedule:
+    """A chosen daily must name a lineup that exists, or the day silently breaks."""
+
+    @staticmethod
+    def schedule() -> dict:
+        import json
+        from pathlib import Path
+
+        path = Path(__file__).resolve().parents[1] / "data" / "daily.json"
+        if not path.exists():
+            return {}
+        return json.loads(path.read_text(encoding="utf-8")).get("schedule", {})
+
+    def test_every_chosen_day_names_a_real_lineup(self, dataset):
+        known = {entry["id"] for entry in dataset["lineups"]}
+        for day, lineup_id in self.schedule().items():
+            assert lineup_id in known, f"{day} names an unknown lineup: {lineup_id}"
+
+    def test_every_key_is_an_iso_date(self):
+        from datetime import date
+
+        for day in self.schedule():
+            date.fromisoformat(day)  # raises if it is not a real yyyy-mm-dd
