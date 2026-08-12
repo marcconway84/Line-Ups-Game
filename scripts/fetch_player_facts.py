@@ -39,6 +39,7 @@ SPARQL = "https://query.wikidata.org/sparql"
 USER_AGENT = "LineUpsGame/1.0 (https://github.com/marcconway84/Line-Ups-Game) python-urllib"
 
 ASSOCIATION_FOOTBALLER = "Q937857"
+ASSOCIATION_FOOTBALL = "Q2736"
 NATIONAL_TEAM = "Q6979593"
 
 #: Typed rows via UNION rather than nested OPTIONALs: an OPTIONAL join multiplies
@@ -132,10 +133,11 @@ def tidy_club(label: str) -> str:
     return out
 
 
-#: A footballer's club career runs roughly between these ages. Anything outside is a
-#: bad claim, not a transfer - Bobby Moore came back from Wikidata with a club founded
-#: six years after he died.
-FIRST_PLAUSIBLE_AGE = 15
+#: Bounds on a club spell. The floor is deliberately low: academy signings are real
+#: career history - Messi joined Newell's at six - and a floor of 15 threw those out
+#: as bad claims. The ceiling and the club-inception check are what actually catch
+#: the bad ones.
+FIRST_PLAUSIBLE_AGE = 6
 LAST_PLAUSIBLE_AGE = 45
 
 
@@ -144,6 +146,27 @@ def _year(value: str | None) -> int | None:
         return int(str(value)[:4])
     except (TypeError, ValueError):
         return None
+
+
+def rejection_reason(born_year: int | None, start: str | None,
+                     founded: str | None = None) -> str | None:
+    """Why this club spell cannot belong to this player, or None if it can."""
+    if born_year is None:
+        return None  # nothing to judge against; review is the backstop
+
+    start_year = _year(start)
+    if start_year is not None:
+        age = start_year - born_year
+        if age < FIRST_PLAUSIBLE_AGE:
+            return f"joined aged {age}"
+        if age > LAST_PLAUSIBLE_AGE:
+            return f"joined aged {age}"
+
+    founded_year = _year(founded)
+    if founded_year is not None and founded_year > born_year + LAST_PLAUSIBLE_AGE:
+        return f"club founded {founded_year}, player born {born_year}"
+
+    return None
 
 
 def plausible_spell(born_year: int | None, start: str | None,
@@ -157,20 +180,7 @@ def plausible_spell(born_year: int | None, start: str | None,
       spurious Midtjylland claim has no start date, so only the second catches it -
       the club was founded in 1999 and he was born in 1941.
     """
-    if born_year is None:
-        return True  # nothing to judge against; review is the backstop
-
-    start_year = _year(start)
-    if start_year is not None:
-        age = start_year - born_year
-        if not (FIRST_PLAUSIBLE_AGE <= age <= LAST_PLAUSIBLE_AGE):
-            return False
-
-    founded_year = _year(founded)
-    if founded_year is not None and founded_year > born_year + LAST_PLAUSIBLE_AGE:
-        return False
-
-    return True
+    return rejection_reason(born_year, start, founded) is None
 
 
 def is_senior_side(label: str) -> bool:
@@ -211,13 +221,27 @@ def find_player(name: str) -> dict | None:
             {"action": "wbgetentities", "ids": qid, "props": "claims", "format": "json"},
         )
         claims = entity.get("entities", {}).get(qid, {}).get("claims", {})
-        occupations = {
-            claim["mainsnak"].get("datavalue", {}).get("value", {}).get("id")
-            for claim in claims.get("P106", [])
-        }
-        if ASSOCIATION_FOOTBALLER in occupations:
+        if is_footballer(claims):
             return {"qid": qid, "label": hit.get("label"), "description": hit.get("description")}
     return None
+
+
+def ids_for(claims: dict, prop: str) -> set:
+    return {
+        claim["mainsnak"].get("datavalue", {}).get("value", {}).get("id")
+        for claim in claims.get(prop, [])
+    }
+
+
+def is_footballer(claims: dict) -> bool:
+    """Two independent markers, because one alone misses people.
+
+    Occupation (P106) is the obvious one, but several single-name players - Xavi,
+    Pelé's team-mate Félix, Piazza - did not resolve on it alone. Sport (P641) set to
+    association football is a second, equally strong signal.
+    """
+    return (ASSOCIATION_FOOTBALLER in ids_for(claims, "P106")
+            or ASSOCIATION_FOOTBALL in ids_for(claims, "P641"))
 
 
 def player_facts(qid: str) -> dict:
@@ -268,9 +292,11 @@ def summarise(rows: list[dict]) -> dict:
         elif kind == "club":
             start = row.get("start", {}).get("value")
             founded = row.get("founded", {}).get("value")
-            if not plausible_spell(born_year, start, founded):
-                if label not in rejected:
-                    rejected.append(label)
+            reason = rejection_reason(born_year, start, founded)
+            if reason:
+                note = f"{label} ({reason})"
+                if note not in rejected:
+                    rejected.append(note)
                 continue
             club = tidy_club(label)
             # Keep the earliest start seen, so a player who rejoins a club keeps his

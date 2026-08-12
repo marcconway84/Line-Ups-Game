@@ -120,10 +120,15 @@ class TestImplausibleSpells:
             row("club", "FC Midtjylland", "1999-01-01T00:00:00Z"),
         ])
         assert facts["career"] == ["West Ham United"]
-        assert facts["rejected_spells"] == ["FC Midtjylland"]
+        assert facts["rejected_spells"] == ["FC Midtjylland (joined aged 58)"]
 
-    def test_a_club_joined_as_a_child_is_rejected(self):
-        facts = fetch.summarise(self.BORN + [row("club", "Somewhere", "1948-01-01T00:00:00Z")])
+    def test_an_academy_spell_is_kept(self):
+        """Messi joined Newell's at six. A youth club is career history, not a bad claim."""
+        facts = fetch.summarise(self.BORN + [row("club", "Youth Club", "1950-01-01T00:00:00Z")])
+        assert facts["career"] == ["Youth Club"]
+
+    def test_a_spell_beginning_before_birth_is_rejected(self):
+        facts = fetch.summarise(self.BORN + [row("club", "Impossible", "1930-01-01T00:00:00Z")])
         assert facts["career"] == []
 
     def test_an_undated_spell_at_a_club_founded_too_late_is_rejected(self):
@@ -133,7 +138,7 @@ class TestImplausibleSpells:
             row("club", "FC Midtjylland", founded="1999-01-01T00:00:00Z"),
         ])
         assert facts["career"] == ["West Ham United"]
-        assert facts["rejected_spells"] == ["FC Midtjylland"]
+        assert facts["rejected_spells"] == ["FC Midtjylland (club founded 1999, player born 1941)"]
 
     def test_a_club_older_than_the_player_is_fine(self):
         facts = fetch.summarise(self.BORN + [
@@ -228,7 +233,7 @@ class TestReviewSummary:
         "Peter Schmeichel": {"nationality": "Denmark", "career": ["Brondby", "Manchester United"],
                              "rejected_spells": []},
         "Bobby Moore": {"nationality": "England", "career": ["West Ham United"],
-                        "rejected_spells": ["FC Midtjylland"]},
+                        "rejected_spells": ["FC Midtjylland (joined aged 58)"]},
         "Someone Obscure": {"nationality": None, "career": [], "rejected_spells": []},
     }
     NAMES = ["Peter Schmeichel", "Bobby Moore", "Someone Obscure", "Never Heard Of Him"]
@@ -258,3 +263,34 @@ class TestReviewSummary:
         out = self.summary(capsys)
         assert "FC Midtjylland" in out
         assert "rejected as implausible" in out
+
+
+class TestFootballerDetection:
+    """Occupation alone missed several single-name players in the full sweep."""
+
+    def test_occupation_marks_a_footballer(self):
+        claims = {"P106": [{"mainsnak": {"datavalue": {"value": {"id": fetch.ASSOCIATION_FOOTBALLER}}}}]}
+        assert fetch.is_footballer(claims)
+
+    def test_sport_alone_is_enough(self):
+        claims = {"P641": [{"mainsnak": {"datavalue": {"value": {"id": fetch.ASSOCIATION_FOOTBALL}}}}]}
+        assert fetch.is_footballer(claims)
+
+    def test_someone_unrelated_is_not_a_footballer(self):
+        claims = {"P106": [{"mainsnak": {"datavalue": {"value": {"id": "Q177220"}}}}]}  # singer
+        assert not fetch.is_footballer(claims)
+
+    def test_no_claims_at_all(self):
+        assert not fetch.is_footballer({})
+
+
+class TestRejectionReasons:
+    def test_reason_names_the_age(self):
+        assert "58" in fetch.rejection_reason(1941, "1999-01-01T00:00:00Z")
+
+    def test_reason_names_the_founding_year(self):
+        reason = fetch.rejection_reason(1941, None, "1999-01-01T00:00:00Z")
+        assert "1999" in reason and "1941" in reason
+
+    def test_a_good_spell_has_no_reason(self):
+        assert fetch.rejection_reason(1941, "1958-01-01T00:00:00Z", "1895-01-01T00:00:00Z") is None
