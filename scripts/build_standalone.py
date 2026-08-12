@@ -304,15 +304,11 @@ h1 {
   line-height: 1.05;
 }
 .fixture .teams em { font-style: normal; color: var(--chalk-dim); }
-.fixture .badge {
-  display: inline-block;
-  margin-top: 0.25rem;
-  padding: 0.1rem 0.45rem;
-  border: 1px solid var(--brass);
+.fixture .seasonnote {
+  margin-top: 0.2rem;
   color: var(--brass);
-  font: 700 0.54rem/1.4 var(--body);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: clamp(0.62rem, 1.6vh, 0.76rem);
+  font-style: italic;
 }
 .fixture .meta {
   font-family: var(--data);
@@ -1024,12 +1020,18 @@ SCRIPT = r"""
     if (l.opponent) teams.appendChild(el("em", null, " v " + l.opponent));
     box.appendChild(teams);
 
-    if (seasonSide) box.appendChild(el("div", "badge", "Season XI"));
+    // Say it in words rather than with a label. "Season XI" is jargon, and a player
+    // looking at Arsenal 2003-04 is entitled to ask which match this is - the answer
+    // being that it is not one.
+    if (seasonSide) {
+      box.appendChild(el("div", "seasonnote",
+        "Not one match — the XI they fielded most in " + l.season));
+    }
 
     var meta = el("div", "meta");
     [
       l.competition,
-      seasonSide ? l.season + " season" : longDate(l.date),
+      seasonSide ? null : longDate(l.date),
       l.venue,
       l.formation.join("-")
     ].filter(Boolean).forEach(function (part) { meta.appendChild(el("b", null, part)); });
