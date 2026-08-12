@@ -29,7 +29,10 @@ def row(kind, label, start=None):
 
 class TestSummarise:
     def test_empty_result_is_all_none(self):
-        assert fetch.summarise([]) == {"nationality": None, "national_team": None, "career": []}
+        assert fetch.summarise([]) == {
+            "nationality": None, "national_team": None, "born": None,
+            "career": [], "rejected_spells": [],
+        }
 
     def test_nationality_comes_from_the_national_side(self):
         facts = fetch.summarise([
@@ -103,15 +106,55 @@ class TestSummarise:
         assert facts["national_team"] == "Denmark national football team"
 
 
+class TestImplausibleSpells:
+    """Wikidata carries the odd bad claim; a career clue must not repeat it."""
+
+    BORN = [{"kind": {"value": "born"}, "label": {"value": "1941"}}]
+
+    def test_a_club_joined_after_a_plausible_career_is_rejected(self):
+        # Bobby Moore, born 1941, came back with a club founded in 1999.
+        facts = fetch.summarise(self.BORN + [
+            row("club", "West Ham United F.C.", "1958-01-01T00:00:00Z"),
+            row("club", "FC Midtjylland", "1999-01-01T00:00:00Z"),
+        ])
+        assert facts["career"] == ["West Ham United"]
+        assert facts["rejected_spells"] == ["FC Midtjylland"]
+
+    def test_a_club_joined_as_a_child_is_rejected(self):
+        facts = fetch.summarise(self.BORN + [row("club", "Somewhere", "1948-01-01T00:00:00Z")])
+        assert facts["career"] == []
+
+    def test_spells_are_kept_when_there_is_no_birth_year_to_judge_against(self):
+        facts = fetch.summarise([row("club", "FC Midtjylland", "1999-01-01T00:00:00Z")])
+        assert facts["career"] == ["FC Midtjylland"]
+
+    def test_undated_spells_survive(self):
+        facts = fetch.summarise(self.BORN + [row("club", "Seattle Sounders")])
+        assert facts["career"] == ["Seattle Sounders"]
+
+
 class TestLabelTidying:
     @pytest.mark.parametrize("team, expected", [
         ("England national football team", "England"),
+        ("England men's national association football team", "England"),
+        ("Denmark men's national association football team", "Denmark"),
         ("Brazil national association football team", "Brazil"),
         ("Wales national football team", "Wales"),
         ("Trinidad and Tobago national football team", "Trinidad and Tobago"),
     ])
     def test_country_from_team(self, team, expected):
         assert fetch.country_from_team(team) == expected
+
+    @pytest.mark.parametrize("club, expected", [
+        ("Manchester United F.C.", "Manchester United"),
+        ("West Ham United F.C.", "West Ham United"),
+        ("Arsenal F.C.", "Arsenal"),
+        ("FC Barcelona", "FC Barcelona"),      # the prefix form is the real name
+        ("AC Milan", "AC Milan"),
+        ("Santos FC", "Santos"),
+    ])
+    def test_tidy_club(self, club, expected):
+        assert fetch.tidy_club(club) == expected
 
     @pytest.mark.parametrize("label, senior", [
         ("England national football team", True),
@@ -138,7 +181,7 @@ class TestNameList:
 
 def test_query_asks_for_the_fields_we_parse():
     """Guard against the query and the parser drifting apart."""
-    for token in ("?kind", "?label", "?start", "citizenship", "national", "club"):
+    for token in ("?kind", "?label", "?start", "citizenship", "national", "club", "born"):
         assert token.lstrip("?") in fetch.FACTS_QUERY
 
 

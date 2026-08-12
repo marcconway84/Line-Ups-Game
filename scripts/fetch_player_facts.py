@@ -46,6 +46,10 @@ NATIONAL_TEAM = "Q6979593"
 FACTS_QUERY = """
 SELECT ?kind ?label ?start WHERE {
   {
+    wd:%(qid)s wdt:P569 ?born.
+    BIND("born" AS ?kind)
+    BIND(STR(YEAR(?born)) AS ?label)
+  } UNION {
     wd:%(qid)s wdt:P27 ?item.
     BIND("citizenship" AS ?kind)
   } UNION {
@@ -96,14 +100,54 @@ def tidy_country(label: str) -> str:
 
 
 def country_from_team(label: str) -> str:
-    """"England national football team" -> "England"."""
+    """"England men's national association football team" -> "England"."""
     out = label
     for suffix in (" national association football team", " national football team",
                    " national soccer team", " national team"):
         if out.endswith(suffix):
             out = out[: -len(suffix)]
             break
+    # Wikidata labels these "X men's ..."; the possessive is left behind by the strip.
+    for tail in (" men's", " women's", " men", " women"):
+        if out.endswith(tail):
+            out = out[: -len(tail)]
+            break
     return out.strip()
+
+
+#: Club labels carry their legal form. "Manchester United" reads better than
+#: "Manchester United F.C.". Only trailing forms are stripped - "FC Barcelona" and
+#: "AC Milan" are how those clubs are actually known.
+CLUB_SUFFIXES = (" F.C.", " FC", " A.F.C.", " AFC", " S.C.", " SC", " C.F.", " CF",
+                 " S.A.D.", " B.C.", " F.C", " Football Club")
+
+
+def tidy_club(label: str) -> str:
+    out = label.strip()
+    for suffix in CLUB_SUFFIXES:
+        if out.endswith(suffix):
+            out = out[: -len(suffix)].strip()
+            break
+    return out
+
+
+#: A footballer's club career runs roughly between these ages. Anything outside is a
+#: bad claim, not a transfer - Bobby Moore came back from Wikidata with a club founded
+#: six years after he died.
+FIRST_PLAUSIBLE_AGE = 15
+LAST_PLAUSIBLE_AGE = 45
+
+
+def plausible_spell(born_year: int | None, start: str | None) -> bool:
+    """Whether a club spell starting on this date could belong to this player."""
+    if born_year is None or not start:
+        return True  # nothing to check against; keep it and let review catch it
+    try:
+        start_year = int(str(start)[:4])
+    except ValueError:
+        return True
+    age = start_year - born_year
+    return FIRST_PLAUSIBLE_AGE <= age <= LAST_PLAUSIBLE_AGE
 
 
 def is_senior_side(label: str) -> bool:
@@ -177,11 +221,20 @@ def summarise(rows: list[dict]) -> dict:
     citizenships: list[str] = []
     national_sides: list[str] = []
     clubs: dict[str, str | None] = {}
+    born_year: int | None = None
+    rejected: list[str] = []
+
+    for row in rows:
+        if row.get("kind", {}).get("value") == "born":
+            try:
+                born_year = int(row["label"]["value"])
+            except (KeyError, ValueError):
+                pass
 
     for row in rows:
         kind = row.get("kind", {}).get("value")
         label = row.get("label", {}).get("value")
-        if not kind or not label:
+        if not kind or not label or kind == "born":
             continue
         if kind == "citizenship":
             if label not in citizenships:
@@ -191,10 +244,15 @@ def summarise(rows: list[dict]) -> dict:
                 national_sides.append(label)
         elif kind == "club":
             start = row.get("start", {}).get("value")
+            if not plausible_spell(born_year, start):
+                if label not in rejected:
+                    rejected.append(label)
+                continue
+            club = tidy_club(label)
             # Keep the earliest start seen, so a player who rejoins a club keeps his
             # first spell's place in the order.
-            if club_is_new_or_earlier(clubs, label, start):
-                clubs[label] = start
+            if club_is_new_or_earlier(clubs, club, start):
+                clubs[club] = start
 
     if national_sides:
         nationality = country_from_team(national_sides[0])
@@ -207,7 +265,10 @@ def summarise(rows: list[dict]) -> dict:
     return {
         "nationality": nationality,
         "national_team": national_sides[0] if national_sides else None,
+        "born": born_year,
         "career": career,
+        # Surfaced rather than silently dropped, so a bad source claim is visible.
+        "rejected_spells": rejected,
     }
 
 
