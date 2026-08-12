@@ -1,0 +1,49 @@
+# Looks player facts up on Wikidata.
+#
+# This runs here rather than on a developer machine because the development sandbox
+# has no route to Wikidata, while a CI runner does. It is manual (workflow_dispatch)
+# so a lookup only happens when someone asks for one.
+#
+#   mode: probe  - a handful of known players, printed for eyeballing. Costs nothing
+#                  and proves the lookup still works.
+#   mode: all    - every player in data/lineups.json, uploaded as an artifact for
+#                  review. Nothing is committed automatically: these facts end up in
+#                  a game, so a human should look before they land.
+name: Look up player facts
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "probe (a few players) or all (the whole archive)"
+        type: choice
+        options: [probe, all]
+        default: probe
+
+permissions:
+  contents: read
+
+jobs:
+  lookup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Probe a few players
+        if: inputs.mode == 'probe'
+        run: python scripts/fetch_player_facts.py --probe
+
+      - name: Look up the whole archive
+        if: inputs.mode == 'all'
+        run: python scripts/fetch_player_facts.py --all --out data/player_facts.json
+
+      - name: Upload the results for review
+        if: inputs.mode == 'all'
+        uses: actions/upload-artifact@v4
+        with:
+          name: player-facts
+          path: data/player_facts.json
