@@ -134,3 +134,40 @@ def test_unknown_difficulty_falls_back_to_default():
     assert rules.get_difficulty("nonsense").key == rules.DEFAULT_DIFFICULTY
     assert rules.get_difficulty(None).key == rules.DEFAULT_DIFFICULTY
     assert rules.get_difficulty("HARD").key == "hard"
+
+
+class TestTheDailyGivesNothingAway:
+    """Eleven blanks, the same eleven for everyone who plays that day."""
+
+    def test_the_daily_starts_with_no_names_shown(self):
+        assert rules.get_difficulty(rules.DAILY_DIFFICULTY).freebies == 0
+
+    def test_it_is_not_one_of_the_settings_a_player_picks(self):
+        # Otherwise it would appear as a fourth chip next to Easy/Medium/Hard.
+        assert rules.DAILY_DIFFICULTY not in rules.CHOOSABLE_DIFFICULTIES
+
+    def test_the_choosable_settings_still_offer_a_head_start(self):
+        # "Good to have the option on the other line ups" - easy and medium still do.
+        assert rules.get_difficulty("easy").freebies == 4
+        assert rules.get_difficulty("medium").freebies == 2
+        assert rules.get_difficulty("hard").freebies == 0
+
+    def test_the_daily_keeps_the_medium_clock_and_multiplier(self):
+        daily, medium = rules.get_difficulty(rules.DAILY_DIFFICULTY), rules.get_difficulty("medium")
+        assert (daily.seconds, daily.multiplier) == (medium.seconds, medium.multiplier)
+
+    def test_all_eleven_are_worth_earning(self):
+        """The leaderboard rejects a score claiming more players than were on offer.
+
+        With no freebies the ceiling is eleven, not nine, and the worker has to know
+        that or an honest full XI on the daily comes back refused.
+        """
+        daily = rules.get_difficulty(rules.DAILY_DIFFICULTY)
+        result = rules.score_round(
+            guessed_slots=11 - daily.freebies,
+            completed=True,
+            seconds_remaining=0,
+            hint_penalty=0,
+            difficulty=daily,
+        )
+        assert result.guess_points == 1650

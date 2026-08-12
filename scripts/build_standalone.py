@@ -792,7 +792,12 @@ SCRIPT = r"""
   var GRADES = {
     easy:   { label: "Easy",   free: 4, seconds: 240, mult: 1.0 },
     medium: { label: "Medium", free: 2, seconds: 180, mult: 1.5 },
-    hard:   { label: "Hard",   free: 0, seconds: 150, mult: 2.0 }
+    hard:   { label: "Hard",   free: 0, seconds: 150, mult: 2.0 },
+    /* The daily gives nothing away - eleven blanks, the same eleven for everyone.
+       A setting of its own rather than "medium with the freebies off", because the
+       leaderboard checks a score against how many players there were to earn and
+       would otherwise turn an honest eleven down as impossible. */
+    daily:  { label: "Daily",  free: 0, seconds: 180, mult: 1.5 }
   };
   var PER_PLAYER = 100, FINISH_BONUS = 250, PER_SECOND = 5;
 
@@ -1454,7 +1459,7 @@ SCRIPT = r"""
 
   function startDaily() {
     var day = today();
-    begin(dailyLineup(day), "medium", "daily:" + day, "daily");
+    begin(dailyLineup(day), "daily", "daily:" + day, "daily");
   }
 
   function finish(how) {

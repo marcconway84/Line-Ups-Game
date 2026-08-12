@@ -31,7 +31,10 @@ async def test_metadata_reports_the_archive(client):
     body = (await client.get("/api/metadata")).json()
     assert body["lineups_count"] >= 15
     assert body["players_count"] > 100
+    # The daily has a setting of its own - eleven blanks - but it is not something a
+    # player chooses, so it must not appear alongside the three that are.
     assert set(body["difficulties"]) == {"easy", "medium", "hard"}
+    assert "daily" not in body["difficulties"]
     assert body["hint_costs"]["reveal"] > body["hint_costs"]["initials"]
 
 

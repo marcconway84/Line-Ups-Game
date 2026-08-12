@@ -27,11 +27,20 @@ DIFFICULTIES: dict[str, Difficulty] = {
     "easy": Difficulty("easy", "Easy", freebies=4, seconds=240, multiplier=1.0),
     "medium": Difficulty("medium", "Medium", freebies=2, seconds=180, multiplier=1.5),
     "hard": Difficulty("hard", "Hard", freebies=0, seconds=150, multiplier=2.0),
+    # The daily gives nothing away: eleven blanks, the same eleven for everybody.
+    # It is a separate setting rather than "medium with the freebies switched off"
+    # because the leaderboard checks a score against how many players were there to
+    # be earned, and would otherwise reject an honest eleven as impossible.
+    "daily": Difficulty("daily", "Daily", freebies=0, seconds=180, multiplier=1.5),
 }
 DEFAULT_DIFFICULTY = "medium"
 
 #: Difficulty used by the daily challenge, so every player gets the same puzzle.
-DAILY_DIFFICULTY = "medium"
+DAILY_DIFFICULTY = "daily"
+
+#: The settings a player can pick for themselves. The daily is not among them - it
+#: comes with the puzzle.
+CHOOSABLE_DIFFICULTIES = ("easy", "medium", "hard")
 
 POINTS_PER_PLAYER = 100
 COMPLETION_BONUS = 250

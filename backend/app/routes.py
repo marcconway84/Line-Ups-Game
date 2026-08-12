@@ -60,7 +60,9 @@ async def metadata(db: AsyncSession = Depends(get_db)):
                 "seconds": d.seconds,
                 "multiplier": d.multiplier,
             }
-            for key, d in rules.DIFFICULTIES.items()
+            # Only the settings a player can pick. The daily has its own, which comes
+            # with the puzzle rather than being offered as a fourth option.
+            for key, d in ((k, rules.DIFFICULTIES[k]) for k in rules.CHOOSABLE_DIFFICULTIES)
         },
         hint_costs=rules.HINT_COSTS,
     )
