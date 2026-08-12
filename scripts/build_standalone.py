@@ -397,7 +397,21 @@ h1 {
   align-items: center;
   gap: 0.15rem;
   text-align: center;
+  /* Hidden players are buttons; strip the browser's chrome. */
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
 }
+button.man { cursor: pointer; }
+button.man:hover .disc, button.man:focus-visible .disc {
+  border-color: var(--brass);
+  color: var(--brass);
+}
+button.man:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+/* A player you have already spent points on. */
+.man.probed .disc { border-color: var(--brass); border-style: dashed; }
 .disc {
   inline-size: clamp(20px, 9cqmin, 46px);
   block-size: clamp(20px, 9cqmin, 46px);
@@ -455,6 +469,38 @@ h1 {
 
 .bench { display: flex; gap: 0.4rem; }
 .bench .btn { font-size: 0.6rem; letter-spacing: 0.06em; padding: 0.5rem 0.25rem; }
+.tip { margin: 0; font-size: 0.68rem; color: var(--chalk-dim); }
+
+/* ------------------------------------------------------------ clue sheet */
+.clue-sub {
+  margin: -0.3rem 0 0.8rem;
+  font-family: var(--data);
+  font-size: 0.7rem;
+  color: var(--chalk-dim);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.clue-list { list-style: none; padding: 0; margin: 0 0 0.9rem; }
+.clue { border-top: var(--rule); padding: 0.5rem 0; }
+.clue-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.clue-label { font-weight: 700; font-size: 0.84rem; }
+.clue-buy {
+  flex: none;
+  border: 1px solid var(--brass);
+  background: none;
+  color: var(--brass);
+  font: 700 0.72rem/1 var(--data);
+  padding: 0.32rem 0.6rem;
+  cursor: pointer;
+  min-width: 3.2rem;
+}
+.clue-buy:hover:not(:disabled) { background: var(--brass); color: var(--board-deep); }
+.clue-buy:disabled { opacity: 0.4; cursor: not-allowed; }
+.clue-cost.spent { font-family: var(--data); font-size: 0.7rem; color: var(--chalk-dim); }
+.clue-blurb { margin: 0.2rem 0 0; font-size: 0.72rem; color: var(--chalk-dim); }
+.clue-text { margin: 0.3rem 0 0; font-size: 0.84rem; color: var(--chalk); }
+.clue.got .clue-label { color: var(--brass); }
+.clue-none { border-top: var(--rule); padding: 0.6rem 0 0; font-size: 0.72rem; color: var(--chalk-dim); }
 
 /* ---------------------------------------------------------------- result */
 .result { display: flex; flex-direction: column; gap: 0.4rem; }
@@ -603,9 +649,8 @@ MARKUP = """
             <button class="btn" type="submit">Call</button>
           </form>
           <p class="verdict" id="verdict" role="status" aria-live="polite"></p>
+          <p class="tip">Stuck? Tap any hidden player for clues.</p>
           <div class="bench">
-            <button class="btn btn-quiet" type="button" id="hint-initials">Initials</button>
-            <button class="btn btn-quiet" type="button" id="hint-reveal">Name one</button>
             <button class="btn btn-flag" type="button" id="concede">Concede</button>
           </div>
         </div>
@@ -634,10 +679,19 @@ MARKUP = """
     <li>Surnames are enough (<strong>Beckham</strong>). Accents are optional &mdash; <strong>Pique</strong> finds Piqu&eacute;.</li>
     <li>Small typos are forgiven on longer names.</li>
     <li>If two players in the same XI share a surname, you'll be asked for a first name.</li>
-    <li><strong>Initials</strong> shows the initials of everyone still missing. <strong>Name one</strong> hands a player over. Both cost points.</li>
+    <li><strong>Stuck on one player? Tap him.</strong> Each shirt has its own clue sheet &mdash; a cryptic
+      hint, a niche fact, his nationality, a previous club, his international record, or the lot.
+      The more a clue gives away, the more it costs.</li>
     <li>Get all eleven before the whistle for a bonus, plus whatever time is left.</li>
   </ul>
   <button class="btn" type="button" data-close>Close</button>
+</dialog>
+
+<dialog id="dlg-clues">
+  <h2 id="clue-title">Clue sheet</h2>
+  <p class="clue-sub" id="clue-sub"></p>
+  <ul class="clue-list" id="clue-list"></ul>
+  <button class="btn" type="button" data-close>Back to the pitch</button>
 </dialog>
 
 <dialog id="dlg-install">
@@ -671,7 +725,22 @@ SCRIPT = r"""
     hard:   { label: "Hard",   free: 0, seconds: 150, mult: 2.0 }
   };
   var PER_PLAYER = 100, FINISH_BONUS = 250, PER_SECOND = 5;
-  var HINT_COST = { initials: 40, reveal: 120 };
+
+  /* Clues are bought per player, listed most expensive first. Price tracks how
+     much a clue gives away: a cryptic hint is cheap and oblique, a full career
+     history all but names the man. `key` is the field in the dataset; the two
+     without one are derived from the name itself and so exist for every player. */
+  var CLUES = [
+    { key: "reveal",  label: "Reveal the name",     cost: 150, blurb: "Just tell me." },
+    { key: "career",  label: "Full career history", cost: 120, blurb: "Every club, in order." },
+    { key: "club",    label: "A previous club",     cost: 75,  blurb: "Not the one he is best known for." },
+    { key: "caps",    label: "International record", cost: 60, blurb: "Caps and goals." },
+    { key: "nation",  label: "Nationality",         cost: 45,  blurb: "Who he played for." },
+    { key: "initials", label: "Initials",           cost: 40,  blurb: "First letters." },
+    { key: "trivia",  label: "Niche fact",          cost: 35,  blurb: "One for the anoraks." },
+    { key: "cryptic", label: "Cryptic clue",        cost: 25,  blurb: "Work for it." }
+  ];
+  var DERIVED = { reveal: 1, initials: 1 };   // available for every player
 
   /* ================================================================== matching
      Mirrors backend/app/matching.py. */
@@ -843,7 +912,8 @@ SCRIPT = r"""
     return {
       lineup: lineup, grade: g, gradeKey: gradeKey, mode: mode,
       free: pickFreeSlots(g.free, seed), named: [], told: [],
-      initialsBought: false, penalty: 0, misses: 0,
+      bought: {},                 // slot index -> { clueKey: true }
+      penalty: 0, misses: 0,
       secondsLeft: g.seconds, over: null, result: null
     };
   }
@@ -974,7 +1044,14 @@ SCRIPT = r"""
       var src = sourceOf(g, i);
       var done = g.over !== null;
 
-      var man = el("div", "man");
+      // A hidden player is a button: tapping him opens his clue sheet.
+      var open = !src && !done;
+      var man = el(open ? "button" : "div", "man");
+      if (open) {
+        man.type = "button";
+        man.setAttribute("aria-label", "Clues for the " + player.pos);
+        man.addEventListener("click", function () { openClues(i); });
+      }
       // Row 0 is the keeper, at the foot of the board; the last row attacks the top.
       man.style.top = (cell.rowCount > 1 ? 93 - (cell.row / (cell.rowCount - 1)) * 86 : 50) + "%";
       man.style.left = (((cell.column + 1) / (cell.rowSize + 1)) * 100) + "%";
@@ -982,8 +1059,13 @@ SCRIPT = r"""
       else if (done) man.classList.add("gone");
       if (justPlaced === i) man.classList.add("new");
 
+      var mine = g.bought[i] || {};
+      var spent = Object.keys(mine).length;
+      if (spent && open) man.classList.add("probed");
+
       man.appendChild(el("span", "disc", player.pos));
-      var label = (src || done) ? player.name : (g.initialsBought ? initialsFor(player.name) : "–");
+      var label = (src || done) ? player.name
+                : (mine.initials ? initialsFor(player.name) : "–");
       man.appendChild(el("span", "tag", label));
       board.appendChild(man);
     });
@@ -1001,10 +1083,6 @@ SCRIPT = r"""
     $("whistle-bar").classList.toggle("late", late);
     $("whistle-bar").style.width = Math.max(0, (g.secondsLeft / g.grade.seconds) * 100) + "%";
 
-    $("hint-initials").disabled = g.initialsBought || !!g.over;
-    $("hint-initials").textContent = g.initialsBought ? "Initials shown" : "Initials −" + HINT_COST.initials;
-    $("hint-reveal").disabled = !!g.over;
-    $("hint-reveal").textContent = "Name one −" + HINT_COST.reveal;
     $("call-input").disabled = !!g.over;
   }
 
@@ -1103,26 +1181,95 @@ SCRIPT = r"""
     input.focus();
   }
 
-  function buyHint(type) {
-    if (!game || game.over) return;
-    var open = hidden(game);
-    if (!open.length) return;
+  /* ==================================================================== clues */
 
-    if (type === "initials") {
-      if (game.initialsBought) return;
-      game.initialsBought = true;
-      game.penalty += HINT_COST.initials;
-      say("Initials shown.", "note");
-    } else {
-      var slot = open[0];
+  function boughtFor(slot) { return game.bought[slot] || (game.bought[slot] = {}); }
+
+  // Which clues this player can offer: the two derived ones always, plus whatever
+  // the dataset actually holds. A clue with no data is not offered rather than
+  // sold and then found to be empty.
+  function cluesFor(slot) {
+    var data = (game.lineup.players[slot] || {}).clues || {};
+    return CLUES.filter(function (clue) {
+      return DERIVED[clue.key] || data[clue.key];
+    });
+  }
+
+  function clueText(slot, key) {
+    var player = game.lineup.players[slot];
+    if (key === "initials") return initialsFor(player.name);
+    if (key === "reveal") return player.name;
+    var value = (player.clues || {})[key];
+    return Array.isArray(value) ? value.join(" → ") : value;
+  }
+
+  function buyClue(slot, key) {
+    if (!game || game.over) return;
+    var clue = CLUES.filter(function (c) { return c.key === key; })[0];
+    if (!clue || boughtFor(slot)[key]) return;
+
+    boughtFor(slot)[key] = true;
+    game.penalty += clue.cost;
+
+    if (key === "reveal") {
       game.told.push(slot);
-      game.penalty += HINT_COST.reveal;
       say(game.lineup.players[slot].name + " — handed to you.", "note");
+      closeDialogs();
       if (hidden(game).length === 0) { finish("won"); return; }
     }
     paintBoard(game);
     paintTally(game);
-    $("call-input").focus();
+    if (key !== "reveal") paintClues(slot);
+  }
+
+  var clueSlot = null;
+
+  function paintClues(slot) {
+    clueSlot = slot;
+    var player = game.lineup.players[slot];
+    var mine = boughtFor(slot);
+
+    $("clue-title").textContent = "Clue sheet";
+    $("clue-sub").textContent = player.pos + " · " +
+      (mine.reveal ? player.name : "still hidden");
+
+    var list = $("clue-list");
+    list.innerHTML = "";
+    var offers = cluesFor(slot);
+
+    offers.forEach(function (clue) {
+      var row = el("li", "clue" + (mine[clue.key] ? " got" : ""));
+      var head = el("div", "clue-head");
+      head.appendChild(el("span", "clue-label", clue.label));
+
+      if (mine[clue.key]) {
+        head.appendChild(el("span", "clue-cost spent", "−" + clue.cost));
+        row.appendChild(head);
+        row.appendChild(el("p", "clue-text", clueText(slot, clue.key)));
+      } else {
+        var buy = el("button", "clue-buy", "−" + clue.cost);
+        buy.type = "button";
+        buy.disabled = !!game.over;
+        buy.addEventListener("click", function () { buyClue(slot, clue.key); });
+        head.appendChild(buy);
+        row.appendChild(head);
+        row.appendChild(el("p", "clue-blurb", clue.blurb));
+      }
+      list.appendChild(row);
+    });
+
+    if (offers.length <= 2) {
+      list.appendChild(el("li", "clue-none",
+        "Only the basics for this one — the written clues have not been added for him yet."));
+    }
+  }
+
+  function openClues(slot) {
+    if (!game || game.over) return;
+    if (visible(game).indexOf(slot) !== -1 && !boughtFor(slot).reveal) return;
+    paintClues(slot);
+    var dlg = $("dlg-clues");
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
   }
 
   var OUTCOMES = { won: "All eleven", lost: "Time up", conceded: "Lineup revealed" };
@@ -1261,8 +1408,6 @@ SCRIPT = r"""
   });
 
   $("call-form").addEventListener("submit", call);
-  $("hint-initials").addEventListener("click", function () { buyHint("initials"); });
-  $("hint-reveal").addEventListener("click", function () { buyHint("reveal"); });
   $("concede").addEventListener("click", function () {
     if (game && !game.over && window.confirm("Concede and see the full XI?")) finish("conceded");
   });
@@ -1273,6 +1418,12 @@ SCRIPT = r"""
   Array.prototype.slice.call(document.querySelectorAll("[data-close]")).forEach(function (b) {
     b.addEventListener("click", function () { b.closest("dialog").close(); });
   });
+  // Buying the name closes the sheet from inside buyClue.
+  function closeDialogs() {
+    Array.prototype.slice.call(document.querySelectorAll("dialog")).forEach(function (d) {
+      if (d.open && d.close) d.close();
+    });
+  }
   $("wipe-record").addEventListener("click", function () {
     if (!window.confirm("Wipe your saved record?")) return;
     writeRecord(blankRecord());
@@ -1300,7 +1451,14 @@ def build(fragment: bool = False) -> str:
             "blurb": entry.get("blurb"),
             "source_url": entry.get("source_url"),
             "players": [
-                {"name": p["name"], "pos": p.get("pos"), "accepts": p.get("accepts", [])}
+                {
+                    "name": p["name"],
+                    "pos": p.get("pos"),
+                    "accepts": p.get("accepts", []),
+                    # Clue sets are optional; a player without one is offered only
+                    # the clues derived from his name.
+                    "clues": p.get("clues", {}),
+                }
                 for p in entry["players"]
             ],
         }

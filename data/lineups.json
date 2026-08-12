@@ -26,53 +26,219 @@
       "players": [
         {
           "name": "Peter Schmeichel",
-          "pos": "GK"
+          "pos": "GK",
+          "clues": {
+            "cryptic": "A wall in gloves who spread himself like a starfish. He captained the side that night — his last game for the club.",
+            "trivia": "His son kept goal for the 5000-1 title winners of 2016.",
+            "nation": "Denmark",
+            "caps": "129 caps for Denmark, and a European Championship winner in 1992.",
+            "club": "Brondby",
+            "career": [
+              "Hvidovre",
+              "Brondby",
+              "Manchester United",
+              "Sporting CP",
+              "Aston Villa",
+              "Manchester City"
+            ]
+          }
         },
         {
           "name": "Denis Irwin",
-          "pos": "LB"
+          "pos": "LB",
+          "clues": {
+            "cryptic": "Cork-born and metronomic. He took the penalties and the free-kicks, and almost never had a bad game.",
+            "trivia": "Ferguson repeatedly named him the most consistent player he ever signed.",
+            "nation": "Republic of Ireland",
+            "caps": "56 caps for the Republic of Ireland, 4 goals.",
+            "club": "Oldham Athletic",
+            "career": [
+              "Leeds United",
+              "Oldham Athletic",
+              "Manchester United",
+              "Wolverhampton Wanderers"
+            ]
+          }
         },
         {
           "name": "Ronny Johnsen",
-          "pos": "CB"
+          "pos": "CB",
+          "clues": {
+            "cryptic": "A Norwegian equally at home at centre-back or in midfield, whose knees never let him settle for long.",
+            "trivia": "He played in Turkey before moving to England.",
+            "nation": "Norway",
+            "caps": "Capped 62 times by Norway.",
+            "club": "Besiktas",
+            "career": [
+              "Stabaek",
+              "Lyn",
+              "Lillestrom",
+              "Besiktas",
+              "Manchester United",
+              "Aston Villa",
+              "Newcastle United",
+              "Valerenga"
+            ]
+          }
         },
         {
           "name": "Jaap Stam",
-          "pos": "CB"
+          "pos": "CB",
+          "clues": {
+            "cryptic": "A shaven-headed Dutchman built like a door. He left abruptly after writing a book.",
+            "trivia": "His autobiography helped end his time at the club; he was sold to Lazio soon after.",
+            "nation": "Netherlands",
+            "caps": "67 caps for the Netherlands.",
+            "club": "PSV Eindhoven",
+            "career": [
+              "Zwolle",
+              "Cambuur",
+              "Willem II",
+              "PSV Eindhoven",
+              "Manchester United",
+              "Lazio",
+              "AC Milan",
+              "Ajax"
+            ]
+          }
         },
         {
           "name": "Gary Neville",
-          "pos": "RB"
+          "pos": "RB",
+          "clues": {
+            "cryptic": "A one-club right-back and academy graduate who became a captain, then a broadcaster.",
+            "trivia": "His brother played in the same team; his sister competed at the Olympics.",
+            "nation": "England",
+            "caps": "85 caps for England.",
+            "club": "None - he played his entire club career at Manchester United.",
+            "career": [
+              "Manchester United"
+            ]
+          }
         },
         {
           "name": "Jesper Blomqvist",
-          "pos": "LM"
+          "pos": "LM",
+          "clues": {
+            "cryptic": "A Swedish winger who started the final on the left and whose career was wrecked by injury soon after.",
+            "trivia": "He played in a Champions League final for an Italian club before joining United.",
+            "nation": "Sweden",
+            "caps": "30 caps for Sweden.",
+            "club": "Parma",
+            "career": [
+              "Tavelsjo",
+              "Umea",
+              "IFK Gothenburg",
+              "AC Milan",
+              "Parma",
+              "Manchester United",
+              "Everton",
+              "Charlton Athletic",
+              "Djurgarden"
+            ]
+          }
         },
         {
           "name": "Nicky Butt",
-          "pos": "CM"
+          "pos": "CM",
+          "clues": {
+            "cryptic": "The quiet one of the academy crop, a ball-winner who deputised in the middle that night.",
+            "trivia": "Pele once named him the best player at the 2002 World Cup for England, to widespread surprise.",
+            "nation": "England",
+            "caps": "39 caps for England.",
+            "club": "Newcastle United",
+            "career": [
+              "Manchester United",
+              "Newcastle United",
+              "Birmingham City",
+              "South China"
+            ]
+          }
         },
         {
           "name": "David Beckham",
           "pos": "CM",
           "accepts": [
             "becks"
-          ]
+          ],
+          "clues": {
+            "cryptic": "Played centrally that night, out of position, because two others were suspended. Known for the right foot and everything else.",
+            "trivia": "He later played in Spain, America, Italy and France, and part-owns an American club.",
+            "nation": "England",
+            "caps": "115 caps for England, 17 goals.",
+            "club": "Preston North End",
+            "career": [
+              "Manchester United",
+              "Preston North End",
+              "Real Madrid",
+              "LA Galaxy",
+              "AC Milan",
+              "Paris Saint-Germain"
+            ]
+          }
         },
         {
           "name": "Ryan Giggs",
-          "pos": "RM"
+          "pos": "RM",
+          "clues": {
+            "cryptic": "A Welsh winger who stayed for two decades and holds the club's appearance record.",
+            "trivia": "He was capped by England as a schoolboy before committing to Wales.",
+            "nation": "Wales",
+            "caps": "64 caps for Wales, 12 goals.",
+            "club": "None - his entire club career was at Manchester United.",
+            "career": [
+              "Manchester United"
+            ]
+          }
         },
         {
           "name": "Dwight Yorke",
-          "pos": "ST"
+          "pos": "ST",
+          "clues": {
+            "cryptic": "A Tobagonian striker with a permanent grin, half of a famous partnership that season.",
+            "trivia": "He played at a World Cup for a nation of little over a million people.",
+            "nation": "Trinidad and Tobago",
+            "caps": "72 caps for Trinidad and Tobago.",
+            "club": "Aston Villa",
+            "career": [
+              "Signal Hill",
+              "Aston Villa",
+              "Manchester United",
+              "Blackburn Rovers",
+              "Birmingham City",
+              "Sydney FC",
+              "Sunderland"
+            ]
+          }
         },
         {
           "name": "Andy Cole",
           "pos": "ST",
           "accepts": [
             "andrew cole"
-          ]
+          ],
+          "clues": {
+            "cryptic": "A prolific finisher whose England career never matched his club scoring; the other half of the partnership.",
+            "trivia": "He once scored five goals in a single Premier League match for Manchester United.",
+            "nation": "England",
+            "caps": "15 caps for England.",
+            "club": "Newcastle United",
+            "career": [
+              "Arsenal",
+              "Fulham",
+              "Bristol City",
+              "Newcastle United",
+              "Manchester United",
+              "Blackburn Rovers",
+              "Fulham",
+              "Manchester City",
+              "Portsmouth",
+              "Birmingham City",
+              "Sunderland",
+              "Burnley",
+              "Nottingham Forest"
+            ]
+          }
         }
       ]
     },
@@ -100,53 +266,221 @@
       "players": [
         {
           "name": "Jerzy Dudek",
-          "pos": "GK"
+          "pos": "GK",
+          "clues": {
+            "cryptic": "His wobbly legs on the line and a double save in extra time made him the hero of the shootout.",
+            "trivia": "He later spent several seasons as a understudy goalkeeper in Spain.",
+            "nation": "Poland",
+            "caps": "60 caps for Poland.",
+            "club": "Feyenoord",
+            "career": [
+              "Concordia Knurow",
+              "Sokol Tychy",
+              "Feyenoord",
+              "Liverpool",
+              "Real Madrid"
+            ]
+          }
         },
         {
           "name": "Djimi Traoré",
-          "pos": "LB"
+          "pos": "LB",
+          "clues": {
+            "cryptic": "A left-back much mocked by supporters, who nonetheless has a European Cup winner's medal.",
+            "trivia": "He is remembered for an unfortunate own goal in an FA Cup tie at Burnley.",
+            "nation": "France",
+            "caps": "Capped by Mali at international level.",
+            "club": "Laval",
+            "career": [
+              "Laval",
+              "Liverpool",
+              "Lens",
+              "Charlton Athletic",
+              "Portsmouth",
+              "Rennes",
+              "Birmingham City",
+              "Marseille",
+              "Monarcas Morelia",
+              "Seattle Sounders"
+            ]
+          }
         },
         {
           "name": "Sami Hyypiä",
-          "pos": "CB"
+          "pos": "CB",
+          "clues": {
+            "cryptic": "A towering Finn signed for a modest fee after a scout saw him on television.",
+            "trivia": "He captained the club before Gerrard, and later managed in Germany.",
+            "nation": "Finland",
+            "caps": "105 caps for Finland.",
+            "club": "Willem II",
+            "career": [
+              "Kumu",
+              "MyPa",
+              "Willem II",
+              "Liverpool",
+              "Bayer Leverkusen"
+            ]
+          }
         },
         {
           "name": "Jamie Carragher",
           "pos": "CB",
           "accepts": [
             "carra"
-          ]
+          ],
+          "clues": {
+            "cryptic": "A boyhood Evertonian who became a one-club man for the other side of the city.",
+            "trivia": "He grew up supporting the club's local rivals.",
+            "nation": "England",
+            "caps": "38 caps for England.",
+            "club": "None - his entire club career was at Liverpool.",
+            "career": [
+              "Liverpool"
+            ]
+          }
         },
         {
           "name": "Steve Finnan",
-          "pos": "RB"
+          "pos": "RB",
+          "clues": {
+            "cryptic": "The right-back who was taken off at half-time, at three down, in the most famous comeback of them all.",
+            "trivia": "He is one of very few players to have played in every division of English league football plus a European Cup final.",
+            "nation": "Republic of Ireland",
+            "caps": "53 caps for the Republic of Ireland.",
+            "club": "Fulham",
+            "career": [
+              "Welling United",
+              "Birmingham City",
+              "Notts County",
+              "Fulham",
+              "Liverpool",
+              "Espanyol",
+              "Portsmouth"
+            ]
+          }
         },
         {
           "name": "John Arne Riise",
-          "pos": "LM"
+          "pos": "LM",
+          "clues": {
+            "cryptic": "A Norwegian with a left foot like a howitzer, and a brother who also played in the Premier League.",
+            "trivia": "His free-kicks were so fierce that teammates joked about standing in the wall.",
+            "nation": "Norway",
+            "caps": "110 caps for Norway.",
+            "club": "Monaco",
+            "career": [
+              "Aalesund",
+              "Monaco",
+              "Liverpool",
+              "Roma",
+              "Fulham",
+              "APOEL",
+              "Delhi Dynamos",
+              "Aalesund"
+            ]
+          }
         },
         {
           "name": "Xabi Alonso",
-          "pos": "CM"
+          "pos": "CM",
+          "clues": {
+            "cryptic": "A Basque passer who scored the equaliser from the rebound of his own missed penalty.",
+            "trivia": "He later won the Champions League with two other clubs, and now manages.",
+            "nation": "Spain",
+            "caps": "114 caps for Spain.",
+            "club": "Real Sociedad",
+            "career": [
+              "Real Sociedad",
+              "Eibar",
+              "Liverpool",
+              "Real Madrid",
+              "Bayern Munich"
+            ]
+          }
         },
         {
           "name": "Steven Gerrard",
           "pos": "CM",
           "accepts": [
             "stevie g"
-          ]
+          ],
+          "clues": {
+            "cryptic": "The captain, a local lad, whose header started the comeback and who won a penalty for the third.",
+            "trivia": "He famously turned down a move to Chelsea in 2005.",
+            "nation": "England",
+            "caps": "114 caps for England, 21 goals.",
+            "club": "LA Galaxy",
+            "career": [
+              "Liverpool",
+              "LA Galaxy"
+            ]
+          }
         },
         {
           "name": "Luis García",
-          "pos": "RM"
+          "pos": "RM",
+          "clues": {
+            "cryptic": "A Spanish forward with a knack for scoring in Europe, including a contested 'ghost goal' in the semi-final.",
+            "trivia": "His semi-final goal against Chelsea is still argued over as to whether it crossed the line.",
+            "nation": "Spain",
+            "caps": "20 caps for Spain.",
+            "club": "Atletico Madrid",
+            "career": [
+              "Barcelona",
+              "Valladolid",
+              "Toledo",
+              "Tenerife",
+              "Atletico Madrid",
+              "Liverpool",
+              "Atletico Madrid",
+              "Racing Santander",
+              "Panathinaikos",
+              "Puebla",
+              "Central Coast Mariners"
+            ]
+          }
         },
         {
           "name": "Harry Kewell",
-          "pos": "ST"
+          "pos": "ST",
+          "clues": {
+            "cryptic": "An Australian winger who limped off injured before half-time in the final.",
+            "trivia": "He came through the youth system at Leeds after moving from Sydney as a teenager.",
+            "nation": "Australia",
+            "caps": "58 caps for Australia.",
+            "club": "Leeds United",
+            "career": [
+              "Leeds United",
+              "Liverpool",
+              "Galatasaray",
+              "Melbourne Victory",
+              "Al-Gharafa",
+              "Melbourne Heart"
+            ]
+          }
         },
         {
           "name": "Milan Baroš",
-          "pos": "ST"
+          "pos": "ST",
+          "clues": {
+            "cryptic": "A Czech striker who was top scorer at the previous summer's European Championship.",
+            "trivia": "He finished as leading scorer at Euro 2004 with five goals.",
+            "nation": "Czech Republic",
+            "caps": "93 caps for the Czech Republic, 41 goals.",
+            "club": "Banik Ostrava",
+            "career": [
+              "Banik Ostrava",
+              "Liverpool",
+              "Aston Villa",
+              "Lyon",
+              "Portsmouth",
+              "Galatasaray",
+              "Banik Ostrava",
+              "Slovan Liberec",
+              "Mlada Boleslav"
+            ]
+          }
         }
       ]
     },
