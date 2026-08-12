@@ -1,4 +1,4 @@
 {
   "_comment": "Where the leaderboard lives. Leave url empty to build the game without one - it plays exactly the same, just with no board. Filled in with the workers.dev address printed by the deploy workflow.",
-  "url": ""
+  "url": "https://lineups-scores.conwaym-mc.workers.dev"
 }

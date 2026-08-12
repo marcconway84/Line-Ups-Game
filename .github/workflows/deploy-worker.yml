@@ -90,6 +90,44 @@ jobs:
         id: deploy
         run: npx wrangler deploy 2>&1 | tee deploy.log
 
+      - name: Prove it actually works
+        run: |
+          set -euo pipefail
+          url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          echo "Testing $url"
+
+          # A round, played through the live service exactly as the game plays one.
+          # The development sandbox cannot reach workers.dev, so this is the only
+          # place a deploy can be checked against the real thing rather than a local
+          # copy of it.
+          token=$(curl -fsS -X POST "$url/round/start" \
+            -H 'content-type: application/json' \
+            -d '{"lineup":"smoke-test","difficulty":"medium"}' | jq -r .token)
+          [ -n "$token" ] && [ "$token" != "null" ] || { echo "::error::no token"; exit 1; }
+
+          player="smoke-$(date +%s)"
+          result=$(curl -fsS -X POST "$url/round/finish" \
+            -H 'content-type: application/json' \
+            -d "{\"token\":\"$token\",\"player\":\"$player\",\"name\":\"Smoke test\",
+                 \"guessed\":9,\"secondsLeft\":180,\"completed\":true,\"clues\":[]}")
+          echo "$result"
+          score=$(echo "$result" | jq -r .score)
+          [ "$score" = "3075" ] || { echo "::error::scored $score, expected 3075"; exit 1; }
+
+          # A made-up total must not be believed.
+          token2=$(curl -fsS -X POST "$url/round/start" \
+            -H 'content-type: application/json' \
+            -d '{"lineup":"smoke-test","difficulty":"medium"}' | jq -r .token)
+          faked=$(curl -fsS -X POST "$url/round/finish" \
+            -H 'content-type: application/json' \
+            -d "{\"token\":\"$token2\",\"player\":\"$player-2\",\"name\":\"Faker\",
+                 \"guessed\":9,\"secondsLeft\":180,\"completed\":true,\"clues\":[],
+                 \"score\":9999999}" | jq -r .score)
+          [ "$faked" = "3075" ] || { echo "::error::accepted a made-up score: $faked"; exit 1; }
+
+          curl -fsS "$url/board?lineup=smoke-test" | jq -e '.top | length > 0' > /dev/null
+          echo "Live service answered correctly."
+
       - name: Say where it went
         run: |
           url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' deploy.log | head -1 || true)
