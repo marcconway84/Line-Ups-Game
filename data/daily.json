@@ -2,5 +2,7 @@
   "_comment": "Days where the daily puzzle is chosen rather than left to the hash. Any date not listed falls back to the usual pick, which spreads evenly across the whole archive. Keys are ISO dates; values are lineup ids from lineups.json - the build fails on an id that does not exist, so a typo cannot quietly become a broken day.",
   "schedule": {
     "2026-08-12": "pl-2012-qpr-mancity"
-  }
+  },
+  "launched": "2026-08-12",
+  "_launched_note": "First day scores were kept. The Boards list starts here - there is nothing to show for any earlier day."
 }

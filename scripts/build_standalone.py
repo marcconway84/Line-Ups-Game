@@ -113,7 +113,20 @@ body {
   line-height: 1;
 }
 .wordmark span { color: var(--brass); }
-.masthead nav { display: flex; gap: 0.8rem; }
+.masthead nav { display: flex; gap: 0.8rem; align-items: baseline; min-width: 0; }
+
+/* Four links plus the wordmark do not fit across a phone at full size, and the last
+   one was being clipped off the right edge. Everything in the bar shrinks together
+   rather than any of it wrapping - the header has to stay one line. */
+@media (max-width: 30rem) {
+  .masthead nav { gap: 0.55rem; }
+  .masthead .textlink { font-size: 0.62rem; letter-spacing: 0.05em; }
+  .wordmark { font-size: 1.15rem; }
+}
+@media (max-width: 22rem) {
+  .masthead nav { gap: 0.4rem; }
+  .masthead .textlink { font-size: 0.56rem; letter-spacing: 0.03em; }
+}
 
 .textlink {
   background: none;
@@ -554,6 +567,29 @@ button.man:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px;
 /* Named "standings", not "board": .board is already the pitch, and the leaderboard
    table quietly inherited its container-query sizing - 120px-tall rows with the
    names scattered across them. */
+/* Today's top three on the front page. Deliberately tiny - the home screen still
+   has to fit a phone without scrolling, and ten names would not. */
+.mini-board { list-style: none; margin: 0.5rem 0 0.7rem; padding: 0; font-size: 0.68rem; }
+.mini-board li {
+  display: flex; justify-content: space-between; gap: 0.5rem;
+  padding: 0.16rem 0; color: var(--chalk-dim); border-bottom: var(--rule);
+}
+.mini-board li:last-child { border-bottom: 0; }
+.mini-board li.you { color: var(--chalk); font-weight: 700; }
+.mini-board .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mini-board .sum { font-family: var(--data); font-variant-numeric: tabular-nums; }
+
+/* One row per past daily, in the Boards dialog. */
+.day-list { list-style: none; margin: 0 0 0.9rem; padding: 0; }
+.day-list li { border-bottom: var(--rule); }
+.day-list button {
+  width: 100%; display: block; text-align: left; background: none; border: 0;
+  padding: 0.5rem 0.1rem; color: var(--chalk); font: inherit; cursor: pointer;
+}
+.day-list button:hover, .day-list button:focus-visible { background: rgba(255,255,255,0.05); }
+.day-list .when { font-size: 0.62rem; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+.day-list .tie { font-size: 0.78rem; }
+.day-list .lead { font-size: 0.66rem; color: var(--chalk-dim); font-family: var(--data); }
 .standings { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
 /* Cells are styled by position rather than by class. Three class names in a row -
    board, tally, points - turned out to already mean the pitch, the stats strip and
@@ -625,6 +661,7 @@ MARKUP = """
   <nav>
     <button class="textlink install" type="button" id="install" hidden>Install</button>
     <button class="textlink" type="button" data-dialog="rules">Rules</button>
+    <button class="textlink" type="button" id="go-boards" hidden>Boards</button>
     <button class="textlink" type="button" data-dialog="record">Record</button>
   </nav>
 </header>
@@ -654,6 +691,9 @@ MARKUP = """
       <div class="deck">
         <h2>Today's XI</h2>
         <p id="daily-note">One lineup a day, the same for everyone who plays it.</p>
+        <!-- Today's top three, once anyone has played. Three and not ten: this sits on
+             the front page, which still has to fit a phone without scrolling. -->
+        <ol class="mini-board" id="today-board" hidden></ol>
         <button class="btn btn-quiet" type="button" id="go-daily">Play today's lineup</button>
       </div>
     </div>
@@ -747,6 +787,13 @@ MARKUP = """
   <h2>Add to your home screen</h2>
   <p id="install-lead" style="color:var(--chalk-dim);font-size:0.84rem;margin:0 0 0.7rem"></p>
   <ul class="steps" id="install-steps"></ul>
+  <button class="btn" type="button" data-close>Close</button>
+</dialog>
+
+<dialog id="dlg-boards">
+  <h2>Daily leaderboards</h2>
+  <p class="clue-sub">Every daily so far. Tap one for the full table.</p>
+  <ul class="day-list" id="day-list"></ul>
   <button class="btn" type="button" data-close>Close</button>
 </dialog>
 
@@ -1226,6 +1273,122 @@ SCRIPT = r"""
 
   function closeDialog(dlg) {
     if (dlg.close) dlg.close(); else dlg.removeAttribute("open");
+  }
+
+  /* Every day the game has had a leaderboard, newest first.
+
+     Worked out rather than stored: the daily is a pure function of the date, so the
+     archive of past dailies can be derived from the calendar and needs no record of
+     its own. LAUNCH is the first day scores were kept - there is nothing to show for
+     any day before it. */
+  var LAUNCH = "__LAUNCH__";
+
+  function pastDailies() {
+    var out = [];
+    var day = new Date(today() + "T00:00:00Z");
+    var first = new Date(LAUNCH + "T00:00:00Z");
+    while (day >= first && out.length < 400) {
+      var iso = day.toISOString().slice(0, 10);
+      out.push({ day: iso, lineup: dailyLineup(iso) });
+      day.setUTCDate(day.getUTCDate() - 1);
+    }
+    return out;
+  }
+
+  function prettyDay(iso) {
+    var d = new Date(iso + "T00:00:00Z");
+    if (iso === today()) return "Today";
+    return d.toLocaleDateString(undefined,
+      { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+  }
+
+  function fixtureOf(lineup) {
+    return lineup.team + (lineup.opponent ? " v " + lineup.opponent : "");
+  }
+
+  /* Today's top three, on the front page. Quiet about failure on purpose: the home
+     screen must not sprout an error because a leaderboard is unreachable. */
+  function paintTodayBoard() {
+    if (!boardOn()) return;
+    var lineup = dailyLineup(today());
+    var who = readWho();
+    fetch(boardUrl("/board?lineup=" + encodeURIComponent(lineup.id)
+                   + (who.id ? "&player=" + encodeURIComponent(who.id) : "")))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !data.top || !data.top.length) return;
+        var list = $("today-board");
+        list.innerHTML = "";
+        data.top.slice(0, 3).forEach(function (row, i) {
+          var li = el("li");
+          if (data.you && data.you.name === row.name && data.you.score === row.score) {
+            li.className = "you";
+          }
+          li.appendChild(el("span", "who", ordinal(i + 1) + "  " + row.name));
+          li.appendChild(el("span", "sum", String(row.score)));
+          list.appendChild(li);
+        });
+        if (data.you && data.you.rank > 3) {
+          var mine = el("li", "you");
+          mine.appendChild(el("span", "who", ordinal(data.you.rank) + "  " + data.you.name));
+          mine.appendChild(el("span", "sum", String(data.you.score)));
+          list.appendChild(mine);
+        }
+        $("daily-note").textContent = data.players +
+          (data.players === 1 ? " person has played today's." : " people have played today's.");
+        list.hidden = false;
+      })
+      .catch(function () { /* no board today; the front page is unchanged */ });
+  }
+
+  function openBoards() {
+    var dlg = $("dlg-boards");
+    var list = $("day-list");
+    var days = pastDailies();
+    list.innerHTML = "";
+    var loading = el("li");
+    loading.appendChild(el("span", "tie", "Loading…"));
+    list.appendChild(loading);
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+
+    var who = readWho();
+    var ids = days.map(function (d) { return d.lineup.id; }).join(",");
+    fetch(boardUrl("/boards?lineups=" + encodeURIComponent(ids)
+                   + (who.id ? "&player=" + encodeURIComponent(who.id) : "")))
+      .then(function (r) { return r.json(); })
+      .then(function (data) { paintDayList(list, days, data.boards || {}); })
+      .catch(function () {
+        list.innerHTML = "";
+        var li = el("li");
+        li.appendChild(el("span", "tie", "Couldn't reach the leaderboard."));
+        list.appendChild(li);
+      });
+  }
+
+  function paintDayList(list, days, boards) {
+    list.innerHTML = "";
+    days.forEach(function (entry) {
+      var stats = boards[entry.lineup.id] || { players: 0, leader: null, yourScore: null };
+      var li = el("li");
+      var btn = el("button");
+      btn.type = "button";
+      btn.appendChild(el("span", "when", prettyDay(entry.day)));
+      btn.appendChild(el("div", "tie", fixtureOf(entry.lineup)));
+      var note = stats.leader
+        ? stats.leader.name + " leads on " + stats.leader.score +
+          " · " + stats.players + (stats.players === 1 ? " player" : " players")
+        : "Nobody has played this one yet";
+      if (stats.yourScore !== null && stats.yourScore !== undefined) {
+        note += " · you " + stats.yourScore;
+      }
+      btn.appendChild(el("div", "lead", note));
+      btn.addEventListener("click", function () {
+        closeDialog($("dlg-boards"));
+        openBoard(entry.lineup.id);
+      });
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
   }
 
   function openBoard(lineupId) {
@@ -1801,6 +1964,11 @@ SCRIPT = r"""
   $("go-quick").addEventListener("click", startQuick);
   $("go-again").addEventListener("click", startQuick);
   $("go-daily").addEventListener("click", startDaily);
+  if (boardOn()) {
+    $("go-boards").hidden = false;
+    $("go-boards").addEventListener("click", openBoards);
+    paintTodayBoard();
+  }
   $("go-home").addEventListener("click", goHome);
   $("home-link").addEventListener("click", goHome);
 
@@ -1893,6 +2061,7 @@ def build(fragment: bool = False) -> str:
     script = script.replace("__PLAYER_FACTS__", player_facts_payload())
     script = script.replace("__LEADERBOARD__", leaderboard_payload())
     script = script.replace("__DAILY__", daily_payload({e["id"] for e in lineups}))
+    script = script.replace("__LAUNCH__", launch_day())
     # Stamped last, over the finished script, so the mark changes whenever anything
     # in the page does - the data, the rules, the leaderboard address, any of it.
     script = script.replace("__BUILD__", hashlib.sha256(script.encode("utf-8")).hexdigest()[:8])
@@ -1944,6 +2113,20 @@ if ("serviceWorker" in navigator) {{
 </body>
 </html>
 """
+
+
+def launch_day() -> str:
+    """The first day the leaderboard was keeping score.
+
+    The list of past dailies is worked out from the calendar rather than stored - the
+    daily is a pure function of the date - so it needs a floor, or it would offer
+    boards for every day back to the epoch. Kept in data/daily.json next to the
+    schedule it belongs with.
+    """
+    default = "2026-08-12"
+    if not DAILY.exists():
+        return default
+    return str(json.loads(DAILY.read_text(encoding="utf-8")).get("launched") or default)
 
 
 def daily_payload(lineup_ids: set[str]) -> str:

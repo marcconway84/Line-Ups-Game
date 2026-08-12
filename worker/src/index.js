@@ -1,10 +1,11 @@
 // The leaderboard: a small HTTP service in front of one SQLite table.
 //
-// Three routes:
+// Four routes:
 //
 //   POST /round/start   a round is beginning - hand back a signed token
 //   POST /round/finish  a round has ended - recalculate it, store it, return the board
 //   GET  /board         the top ten for one lineup, and where this player came
+//   GET  /boards        the leader and your own score for many lineups at once
 //
 // The rule the game is built around - a lineup counts on your first attempt only - is
 // a primary key on (lineup, player), so it holds even if something above it is wrong.
@@ -16,6 +17,8 @@ const BOARD_SIZE = 10;
 const MAX_NAME = 24;
 const ROUNDS_PER_HOUR = 120;
 const TOKEN_SWEEP_MS = 3 * 60 * 60 * 1000;
+// One day of dailies each. A year of them still fits comfortably in one query.
+const MAX_BOARDS = 400;
 
 export default {
   async fetch(request, env) {
@@ -30,6 +33,9 @@ export default {
       }
       if (url.pathname === "/board" && request.method === "GET") {
         return cors(await board(url, env));
+      }
+      if (url.pathname === "/boards" && request.method === "GET") {
+        return cors(await boards(url, env));
       }
       if (url.pathname === "/health") return cors(json({ ok: true }));
       return cors(json({ error: "no such route" }, 404));
@@ -122,6 +128,59 @@ async function board(url, env) {
   const lineup = requireText(url.searchParams.get("lineup"), "lineup", 64);
   const player = url.searchParams.get("player") || null;
   return json(await standingsFor(env, lineup, player));
+}
+
+/**
+ * Several boards at once, for the list of past daily puzzles.
+ *
+ * One request rather than one per day: the list grows by a day every day, and a
+ * page that fires thirty requests to draw a list is a page that feels broken on a
+ * phone. Only the leader and the asking player's own place come back, which is all
+ * the list shows - the full board is a tap away and fetched then.
+ */
+async function boards(url, env) {
+  const wanted = (url.searchParams.get("lineups") || "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  if (!wanted.length) throw new BadRound("lineups is required");
+  if (wanted.length > MAX_BOARDS) throw new BadRound(`at most ${MAX_BOARDS} boards at a time`);
+  const player = url.searchParams.get("player") || null;
+
+  const placeholders = wanted.map(() => "?").join(", ");
+  const rows = await env.DB.prepare(
+    `SELECT lineup, name, score FROM scores WHERE lineup IN (${placeholders})
+       ORDER BY lineup, score DESC, created_at ASC`
+  )
+    .bind(...wanted)
+    .all();
+
+  const counts = new Map();
+  const leaders = new Map();
+  for (const row of rows.results || []) {
+    counts.set(row.lineup, (counts.get(row.lineup) || 0) + 1);
+    if (!leaders.has(row.lineup)) leaders.set(row.lineup, { name: row.name, score: row.score });
+  }
+
+  const mine = new Map();
+  if (player) {
+    const own = await env.DB.prepare(
+      `SELECT lineup, score FROM scores WHERE player = ? AND lineup IN (${placeholders})`
+    )
+      .bind(player, ...wanted)
+      .all();
+    for (const row of own.results || []) mine.set(row.lineup, row.score);
+  }
+
+  const out = {};
+  for (const lineup of wanted) {
+    out[lineup] = {
+      players: counts.get(lineup) || 0,
+      leader: leaders.get(lineup) || null,
+      yourScore: mine.has(lineup) ? mine.get(lineup) : null,
+    };
+  }
+  return json({ boards: out });
 }
 
 async function standingsFor(env, lineup, player) {

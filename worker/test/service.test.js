@@ -265,6 +265,43 @@ describe("the leaderboard service", { concurrency: false }, () => {
     assert.equal(body.top[0].name, "Anonymous");
   });
 
+  test("many boards come back in one request", async () => {
+    await finish("many-a", "ma1", "Ada");
+    await finish("many-a", "ma2", "Ben", conceded(3));
+    await finish("many-b", "ma1", "Ada", conceded(6));
+
+    const response = await fetch(
+      `${BASE}/boards?lineups=many-a,many-b,many-never-played&player=ma1`
+    );
+    const { boards } = await response.json();
+
+    assert.equal(boards["many-a"].players, 2);
+    assert.equal(boards["many-a"].leader.name, "Ada");
+    assert.equal(boards["many-a"].leader.score, PERFECT);
+    assert.equal(boards["many-a"].yourScore, PERFECT);
+
+    assert.equal(boards["many-b"].players, 1);
+    assert.equal(boards["many-b"].yourScore, 900);
+
+    // A day nobody has played still gets an entry, so the list has no holes in it.
+    assert.deepEqual(boards["many-never-played"], {
+      players: 0, leader: null, yourScore: null,
+    });
+  });
+
+  test("asking for no boards is refused rather than answered emptily", async () => {
+    const response = await fetch(`${BASE}/boards?lineups=`);
+    assert.equal(response.status, 400);
+  });
+
+  test("your own score is left out when you do not say who you are", async () => {
+    await finish("anon-board", "anon1", "Ada");
+    const response = await fetch(`${BASE}/boards?lineups=anon-board`);
+    const { boards } = await response.json();
+    assert.equal(boards["anon-board"].leader.name, "Ada");
+    assert.equal(boards["anon-board"].yourScore, null);
+  });
+
   test("the board is readable from the page, wherever it is served from", async () => {
     const response = await fetch(`${BASE}/board?lineup=utd-1999`);
     assert.equal(response.headers.get("access-control-allow-origin"), "*");
