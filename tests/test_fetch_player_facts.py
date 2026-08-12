@@ -575,3 +575,67 @@ class TestNationality:
     def test_the_query_asks_for_country_for_sport(self):
         assert "P1532" in fetch.FACTS_QUERY
         assert 'BIND("sportcountry" AS ?kind)' in fetch.FACTS_QUERY
+
+
+class TestDualNationals:
+    """Nedum Onuoha: born in Nigeria, dual citizenship, England at under-21 only.
+
+    Citizenship alone could answer either way, and answering "Nigeria" would be as
+    unhelpful as "United Kingdom" was. A cap for England - at any level - settles
+    which country he belongs to in footballing terms, and that is all the clue says.
+    """
+
+    @staticmethod
+    def rows(**kinds):
+        out = []
+        for kind, labels in kinds.items():
+            for label in labels:
+                out.append({"kind": {"value": kind}, "label": {"value": label}})
+        return out
+
+    def test_a_youth_cap_settles_it_where_citizenship_cannot(self):
+        facts = fetch.summarise(self.rows(
+            national=["England national under-21 football team"],
+            citizenship=["Nigeria", "United Kingdom"],
+        ))
+        assert facts["nationality"] == "England"
+
+    def test_a_youth_cap_is_never_reported_as_a_senior_one(self):
+        # The clue says where he is from. It must not imply he was capped.
+        facts = fetch.summarise(self.rows(
+            national=["England national under-21 football team"], citizenship=["Nigeria"]))
+        assert facts["national_team"] is None
+
+    def test_a_senior_cap_still_wins(self):
+        facts = fetch.summarise(self.rows(
+            national=["Nigeria national football team",
+                      "England national under-21 football team"],
+            citizenship=["United Kingdom"],
+        ))
+        assert facts["nationality"] == "Nigeria"
+        assert facts["national_team"] == "Nigeria national football team"
+
+    def test_the_sporting_country_still_beats_a_youth_cap(self):
+        facts = fetch.summarise(self.rows(
+            sportcountry=["England"],
+            national=["Republic of Ireland national under-21 football team"],
+        ))
+        assert facts["nationality"] == "England"
+
+    def test_citizenship_is_still_there_when_he_never_represented_anyone(self):
+        facts = fetch.summarise(self.rows(citizenship=["Nigeria"]))
+        assert facts["nationality"] == "Nigeria"
+
+    @pytest.mark.parametrize(
+        "side, expected",
+        [
+            ("England national under-21 football team", "England"),
+            ("England national under-17 football team", "England"),
+            ("Wales national youth football team", "Wales"),
+            ("Germany Olympic football team", "Germany"),
+            ("Brazil national football team", "Brazil"),
+            ("England men's national football team", "England"),
+        ],
+    )
+    def test_an_age_group_side_reduces_to_its_country(self, side, expected):
+        assert fetch.country_from_team(side) == expected

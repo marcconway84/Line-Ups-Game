@@ -121,8 +121,19 @@ def tidy_country(label: str) -> str:
     return COUNTRY_TIDY.get(label, label)
 
 
+#: Age-group markers, stripped so an under-21 side reduces to its country.
+AGE_GROUP_MARKERS = (" under-16", " under-17", " under-18", " under-19", " under-20",
+                     " under-21", " under-23", " u16", " u17", " u18", " u19", " u20",
+                     " u21", " u23", " olympic", " youth", " amateur", " b")
+
+
 def country_from_team(label: str) -> str:
-    """"England men's national association football team" -> "England"."""
+    """"England men's national association football team" -> "England".
+
+    Also reduces an age-group side to its country: "England national under-21
+    football team" -> "England". A youth cap is the last thing consulted before
+    citizenship, so it has to come out as a country like any other source.
+    """
     out = label
     for suffix in (" national association football team", " national football team",
                    " national soccer team", " national team"):
@@ -134,6 +145,15 @@ def country_from_team(label: str) -> str:
         if out.endswith(tail):
             out = out[: -len(tail)]
             break
+    # "England national under-21" -> "England national" -> "England"
+    lowered = out.lower()
+    for marker in AGE_GROUP_MARKERS:
+        at = lowered.find(marker)
+        if at != -1:
+            out = out[:at]
+            break
+    if out.lower().endswith(" national"):
+        out = out[: -len(" national")]
     return out.strip()
 
 
@@ -420,6 +440,13 @@ def summarise(rows: list[dict]) -> dict:
     players who never won a cap: Clint Hill played 500-odd games and none for
     England, and citizenship was all that was left for him.
 
+    Youth caps come before citizenship for the same reason. Nedum Onuoha was born in
+    Nigeria, holds dual citizenship and played for England at under-21 level and never
+    above it. Citizenship could answer either way; an England youth cap settles which
+    country he belongs to in footballing terms, which is all this clue claims. It is
+    never reported as a senior appearance - the clue says where he is from, not who he
+    played for.
+
     "United Kingdom" is refused outright at the end. It is not a footballing
     nationality, and no clue is better than a useless one.
 
@@ -430,6 +457,7 @@ def summarise(rows: list[dict]) -> dict:
     citizenships: list[str] = []
     sport_countries: list[str] = []
     national_sides: list[str] = []
+    youth_sides: list[str] = []
     clubs: dict[str, str | None] = {}
     born_year: int | None = None
     rejected: list[str] = []
@@ -453,8 +481,14 @@ def summarise(rows: list[dict]) -> dict:
             if label not in sport_countries:
                 sport_countries.append(label)
         elif kind == "national":
-            if is_senior_side(label) and label not in national_sides:
-                national_sides.append(label)
+            if is_senior_side(label):
+                if label not in national_sides:
+                    national_sides.append(label)
+            elif label not in youth_sides:
+                # Kept, not discarded. An under-21 cap is not a senior cap and is never
+                # reported as one, but it does settle which country a player belongs to
+                # in footballing terms - which is all this clue claims.
+                youth_sides.append(label)
         elif kind == "club":
             start = row.get("start", {}).get("value")
             founded = row.get("founded", {}).get("value")
@@ -474,6 +508,8 @@ def summarise(rows: list[dict]) -> dict:
         nationality = country_from_team(national_sides[0])
     elif sport_countries:
         nationality = tidy_country(sport_countries[0])
+    elif youth_sides:
+        nationality = country_from_team(youth_sides[0])
     elif citizenships:
         nationality = tidy_country(citizenships[0])
     else:
