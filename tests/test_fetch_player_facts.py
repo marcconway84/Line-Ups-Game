@@ -518,3 +518,60 @@ class TestAgeOnTheDay:
         # A missing birth year or an undated match must not silently drop a player.
         assert fetch.plausible_starter(None, 1998) is None
         assert fetch.plausible_starter(1969, None) is None
+
+
+class TestNationality:
+    """Reported as "Clint Hill is showing as United Kingdom, when it is England".
+
+    Two things were wrong. Citizenship cannot tell England from Scotland or Wales,
+    and it was the only source left for a player who never won a cap. And the clue
+    called itself "who he played for", which for Clint Hill - 500-odd games, none of
+    them for England - was simply untrue.
+    """
+
+    @staticmethod
+    def rows(**kinds):
+        out = []
+        for kind, labels in kinds.items():
+            for label in labels:
+                out.append({"kind": {"value": kind}, "label": {"value": label}})
+        return out
+
+    def test_a_capped_player_gets_the_side_he_played_for(self):
+        facts = fetch.summarise(self.rows(
+            national=["England men's national football team"],
+            sportcountry=["England"],
+            citizenship=["United Kingdom"],
+        ))
+        assert facts["nationality"] == "England"
+
+    def test_an_uncapped_briton_falls_back_to_his_sporting_country(self):
+        # Clint Hill: no caps, so only citizenship was left, and it said "United
+        # Kingdom". Country for sport knows the difference.
+        facts = fetch.summarise(self.rows(
+            sportcountry=["England"], citizenship=["United Kingdom"]))
+        assert facts["nationality"] == "England"
+        assert facts["national_team"] is None
+
+    def test_united_kingdom_alone_is_refused(self):
+        """No clue beats a useless one - "United Kingdom" names no football team."""
+        facts = fetch.summarise(self.rows(citizenship=["United Kingdom"]))
+        assert facts["nationality"] is None
+
+    @pytest.mark.parametrize("state", ["Soviet Union", "Yugoslavia", "Czechoslovakia",
+                                       "Great Britain"])
+    def test_states_that_field_no_side_today_are_refused(self, state):
+        assert fetch.summarise(self.rows(citizenship=[state]))["nationality"] is None
+
+    def test_citizenship_still_serves_where_it_is_the_right_answer(self):
+        facts = fetch.summarise(self.rows(citizenship=["Kingdom of Spain"]))
+        assert facts["nationality"] == "Spain"
+
+    def test_the_sporting_country_beats_citizenship_but_not_a_cap(self):
+        facts = fetch.summarise(self.rows(
+            national=["Wales men's national football team"], sportcountry=["England"]))
+        assert facts["nationality"] == "Wales"
+
+    def test_the_query_asks_for_country_for_sport(self):
+        assert "P1532" in fetch.FACTS_QUERY
+        assert 'BIND("sportcountry" AS ?kind)' in fetch.FACTS_QUERY

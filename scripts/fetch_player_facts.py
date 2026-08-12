@@ -59,6 +59,13 @@ SELECT ?kind ?label ?start ?founded WHERE {
     wd:%(qid)s wdt:P27 ?item.
     BIND("citizenship" AS ?kind)
   } UNION {
+    # "Country for sport". For a British player this is England, Scotland, Wales or
+    # Northern Ireland - the distinction citizenship cannot make, and the one that
+    # matters here. It is recorded for players who never won a cap, which is exactly
+    # where the national-side route runs out.
+    wd:%(qid)s wdt:P1532 ?item.
+    BIND("sportcountry" AS ?kind)
+  } UNION {
     wd:%(qid)s p:P54 ?statement.
     ?statement ps:P54 ?item.
     ?item wdt:P31/wdt:P279* wd:%(national)s.
@@ -96,6 +103,14 @@ COUNTRY_TIDY = {
     "Republic of Ireland": "Republic of Ireland",
     "Commonwealth of Australia": "Australia",
 }
+
+#: States that field no football team. "United Kingdom" is the one that matters:
+#: it is what citizenship returns for every English, Scottish, Welsh and Northern
+#: Irish player, and it tells a quizzer nothing.
+NOT_A_FOOTBALLING_NATION = frozenset({"United Kingdom", "Kingdom of Great Britain",
+                                      "United Kingdom of Great Britain and Ireland",
+                                      "Great Britain", "Soviet Union", "Yugoslavia",
+                                      "Czechoslovakia"})
 
 #: Youth, B and Olympic sides are not what "he played for X" means.
 NOT_A_SENIOR_SIDE = ("under-", "under ", "u21", "u-21", "u23", "u-23", "olympic",
@@ -396,16 +411,24 @@ def player_facts(qid: str) -> dict:
 def summarise(rows: list[dict]) -> dict:
     """Fold typed SPARQL rows into one record. Pure - covered by tests.
 
-    Nationality comes from the senior national side a player actually turned out for,
-    falling back to citizenship. That order matters: citizenship says "United Kingdom"
-    for an Englishman and cannot tell England from Scotland or Wales, which is exactly
-    the distinction a football clue needs.
+    Nationality is taken from three sources in order: the senior national side he
+    actually played for, then his "country for sport", then citizenship.
+
+    The order is the whole point. Citizenship says "United Kingdom" for an Englishman
+    and cannot tell England from Scotland or Wales - the one distinction a football
+    clue needs. Country for sport can, and unlike a national side it exists for
+    players who never won a cap: Clint Hill played 500-odd games and none for
+    England, and citizenship was all that was left for him.
+
+    "United Kingdom" is refused outright at the end. It is not a footballing
+    nationality, and no clue is better than a useless one.
 
     Caps and goals are deliberately absent. The probe showed Wikidata's qualifiers on
     these statements are patchy and easy to misread - Piqué came back with 5 caps -
     and a confidently wrong number is worse than no number at all.
     """
     citizenships: list[str] = []
+    sport_countries: list[str] = []
     national_sides: list[str] = []
     clubs: dict[str, str | None] = {}
     born_year: int | None = None
@@ -426,6 +449,9 @@ def summarise(rows: list[dict]) -> dict:
         if kind == "citizenship":
             if label not in citizenships:
                 citizenships.append(label)
+        elif kind == "sportcountry":
+            if label not in sport_countries:
+                sport_countries.append(label)
         elif kind == "national":
             if is_senior_side(label) and label not in national_sides:
                 national_sides.append(label)
@@ -446,9 +472,13 @@ def summarise(rows: list[dict]) -> dict:
 
     if national_sides:
         nationality = country_from_team(national_sides[0])
+    elif sport_countries:
+        nationality = tidy_country(sport_countries[0])
     elif citizenships:
         nationality = tidy_country(citizenships[0])
     else:
+        nationality = None
+    if nationality in NOT_A_FOOTBALLING_NATION:
         nationality = None
 
     career = [club for club, _ in sorted(clubs.items(), key=lambda kv: (kv[1] is None, kv[1] or ""))]
