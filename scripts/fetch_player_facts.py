@@ -39,27 +39,76 @@ SPARQL = "https://query.wikidata.org/sparql"
 USER_AGENT = "LineUpsGame/1.0 (https://github.com/marcconway84/Line-Ups-Game) python-urllib"
 
 ASSOCIATION_FOOTBALLER = "Q937857"
+NATIONAL_TEAM = "Q6979593"
 
-#: One statement per fact, so a wrong answer can be traced to a single claim.
+#: Typed rows via UNION rather than nested OPTIONALs: an OPTIONAL join multiplies
+#: rows together and makes it hard to tell which fact came from which statement.
 FACTS_QUERY = """
-SELECT ?nationalityLabel ?teamLabel ?caps ?goals ?clubLabel ?start WHERE {
-  OPTIONAL { wd:%(qid)s wdt:P27 ?nationality. }
-  OPTIONAL {
-    wd:%(qid)s p:P54 ?membership.
-    ?membership ps:P54 ?team.
-    ?team wdt:P31 wd:Q6979593.          # a national association football team
-    OPTIONAL { ?membership pq:P1350 ?caps. }
-    OPTIONAL { ?membership pq:P1351 ?goals. }
+SELECT ?kind ?label ?start WHERE {
+  {
+    wd:%(qid)s wdt:P27 ?item.
+    BIND("citizenship" AS ?kind)
+  } UNION {
+    wd:%(qid)s p:P54 ?statement.
+    ?statement ps:P54 ?item.
+    ?item wdt:P31/wdt:P279* wd:%(national)s.
+    OPTIONAL { ?statement pq:P580 ?start. }
+    BIND("national" AS ?kind)
+  } UNION {
+    wd:%(qid)s p:P54 ?statement.
+    ?statement ps:P54 ?item.
+    FILTER NOT EXISTS { ?item wdt:P31/wdt:P279* wd:%(national)s. }
+    OPTIONAL { ?statement pq:P580 ?start. }
+    BIND("club" AS ?kind)
   }
-  OPTIONAL {
-    wd:%(qid)s p:P54 ?clubMembership.
-    ?clubMembership ps:P54 ?club.
-    FILTER NOT EXISTS { ?club wdt:P31 wd:Q6979593. }
-    OPTIONAL { ?clubMembership pq:P580 ?start. }
-  }
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". ?item rdfs:label ?label. }
 }
 """
+
+#: Wikidata's citizenship values are the formal state names. A football game wants
+#: the everyday one.
+COUNTRY_TIDY = {
+    "Kingdom of Denmark": "Denmark",
+    "Kingdom of the Netherlands": "Netherlands",
+    "Kingdom of Norway": "Norway",
+    "Kingdom of Spain": "Spain",
+    "Kingdom of Sweden": "Sweden",
+    "Federal Republic of Germany": "Germany",
+    "Italian Republic": "Italy",
+    "French Republic": "France",
+    "Portuguese Republic": "Portugal",
+    "Argentine Republic": "Argentina",
+    "Federative Republic of Brazil": "Brazil",
+    "Republic of Poland": "Poland",
+    "Republic of Finland": "Finland",
+    "Czechia": "Czech Republic",
+    "Republic of Ireland": "Republic of Ireland",
+    "Commonwealth of Australia": "Australia",
+}
+
+#: Youth, B and Olympic sides are not what "he played for X" means.
+NOT_A_SENIOR_SIDE = ("under-", "under ", "u21", "u-21", "u23", "u-23", "olympic",
+                     "b team", " b national", "youth", "amateur")
+
+
+def tidy_country(label: str) -> str:
+    return COUNTRY_TIDY.get(label, label)
+
+
+def country_from_team(label: str) -> str:
+    """"England national football team" -> "England"."""
+    out = label
+    for suffix in (" national association football team", " national football team",
+                   " national soccer team", " national team"):
+        if out.endswith(suffix):
+            out = out[: -len(suffix)]
+            break
+    return out.strip()
+
+
+def is_senior_side(label: str) -> bool:
+    lowered = label.lower()
+    return not any(marker in lowered for marker in NOT_A_SENIOR_SIDE)
 
 
 def _get(url: str, params: dict) -> dict:
@@ -105,42 +154,68 @@ def find_player(name: str) -> dict | None:
 
 
 def player_facts(qid: str) -> dict:
-    payload = _get(SPARQL, {"query": FACTS_QUERY % {"qid": qid}, "format": "json"})
+    payload = _get(
+        SPARQL,
+        {"query": FACTS_QUERY % {"qid": qid, "national": NATIONAL_TEAM}, "format": "json"},
+    )
     rows = payload.get("results", {}).get("bindings", [])
     return summarise(rows)
 
 
 def summarise(rows: list[dict]) -> dict:
-    """Fold repeated SPARQL rows into one record. Pure - covered by tests."""
-    nationality = None
-    national_team = None
-    caps = goals = None
+    """Fold typed SPARQL rows into one record. Pure - covered by tests.
+
+    Nationality comes from the senior national side a player actually turned out for,
+    falling back to citizenship. That order matters: citizenship says "United Kingdom"
+    for an Englishman and cannot tell England from Scotland or Wales, which is exactly
+    the distinction a football clue needs.
+
+    Caps and goals are deliberately absent. The probe showed Wikidata's qualifiers on
+    these statements are patchy and easy to misread - Piqué came back with 5 caps -
+    and a confidently wrong number is worse than no number at all.
+    """
+    citizenships: list[str] = []
+    national_sides: list[str] = []
     clubs: dict[str, str | None] = {}
 
     for row in rows:
-        if nationality is None and "nationalityLabel" in row:
-            nationality = row["nationalityLabel"]["value"]
-        if "teamLabel" in row and national_team is None:
-            national_team = row["teamLabel"]["value"]
-        if "caps" in row and caps is None:
-            caps = int(float(row["caps"]["value"]))
-        if "goals" in row and goals is None:
-            goals = int(float(row["goals"]["value"]))
-        if "clubLabel" in row:
-            club = row["clubLabel"]["value"]
+        kind = row.get("kind", {}).get("value")
+        label = row.get("label", {}).get("value")
+        if not kind or not label:
+            continue
+        if kind == "citizenship":
+            if label not in citizenships:
+                citizenships.append(label)
+        elif kind == "national":
+            if is_senior_side(label) and label not in national_sides:
+                national_sides.append(label)
+        elif kind == "club":
             start = row.get("start", {}).get("value")
-            # Keep the earliest start date seen for each club, to order the career.
-            if club not in clubs or (start and (clubs[club] is None or start < clubs[club])):
-                clubs[club] = start
+            # Keep the earliest start seen, so a player who rejoins a club keeps his
+            # first spell's place in the order.
+            if club_is_new_or_earlier(clubs, label, start):
+                clubs[label] = start
+
+    if national_sides:
+        nationality = country_from_team(national_sides[0])
+    elif citizenships:
+        nationality = tidy_country(citizenships[0])
+    else:
+        nationality = None
 
     career = [club for club, _ in sorted(clubs.items(), key=lambda kv: (kv[1] is None, kv[1] or ""))]
     return {
         "nationality": nationality,
-        "national_team": national_team,
-        "caps": caps,
-        "goals": goals,
+        "national_team": national_sides[0] if national_sides else None,
         "career": career,
     }
+
+
+def club_is_new_or_earlier(clubs: dict, label: str, start: str | None) -> bool:
+    if label not in clubs:
+        return True
+    existing = clubs[label]
+    return bool(start) and (existing is None or start < existing)
 
 
 def dataset_names() -> list[str]:
@@ -174,12 +249,8 @@ def run(names: list[str], pause: float = 0.4) -> dict:
                 continue
             facts = player_facts(found["qid"])
             out[name] = {**facts, "wikidata_id": found["qid"]}
-            print(
-                f"  {name:<26} {found['qid']:<10} "
-                f"{str(facts['nationality']):<18} "
-                f"caps={facts['caps']} goals={facts['goals']} "
-                f"clubs={len(facts['career'])}"
-            )
+            career = ", ".join(facts["career"][:5]) + ("…" if len(facts["career"]) > 5 else "")
+            print(f"  {name:<26} {found['qid']:<10} {str(facts['nationality']):<20} {career}")
         except Exception as exc:  # noqa: BLE001 - a probe should report, not crash
             print(f"  {name:<26} ERROR {type(exc).__name__}: {exc}")
         time.sleep(pause)
