@@ -7790,6 +7790,87 @@
           "pos": "ST"
         }
       ]
+    },
+    {
+      "id": "pl-2012-qpr-mancity",
+      "team": "Queens Park Rangers",
+      "opponent": "Manchester City",
+      "score": "2-3",
+      "competition": "Premier League",
+      "season": "2011-12",
+      "date": "2012-05-13",
+      "venue": "Etihad Stadium, Manchester",
+      "formation": [
+        4,
+        5,
+        1
+      ],
+      "tags": [
+        "club",
+        "england",
+        "2010s"
+      ],
+      "blurb": "The other side of the most famous finish in Premier League history. QPR went 2-1 up at the Etihad with Joey Barton already sent off, and were surviving in the Championship-facing sense until Dzeko and Aguero scored in stoppage time. They stayed up anyway - Bolton failed to win at Stoke.",
+      "source_url": "https://en.wikipedia.org/wiki/2011%E2%80%9312_Premier_League",
+      "players": [
+        {
+          "name": "Paddy Kenny",
+          "pos": "GK",
+          "accepts": [
+            "patrick kenny"
+          ]
+        },
+        {
+          "name": "Nedum Onuoha",
+          "pos": "RB"
+        },
+        {
+          "name": "Anton Ferdinand",
+          "pos": "CB"
+        },
+        {
+          "name": "Clint Hill",
+          "pos": "CB"
+        },
+        {
+          "name": "Taye Taiwo",
+          "pos": "LB"
+        },
+        {
+          "name": "Shaun Wright-Phillips",
+          "pos": "RM",
+          "accepts": [
+            "swp",
+            "wright phillips"
+          ]
+        },
+        {
+          "name": "Shaun Derry",
+          "pos": "CM"
+        },
+        {
+          "name": "Samba Diakité",
+          "pos": "CM",
+          "accepts": [
+            "diakite"
+          ]
+        },
+        {
+          "name": "Joey Barton",
+          "pos": "CM"
+        },
+        {
+          "name": "Jamie Mackie",
+          "pos": "LM"
+        },
+        {
+          "name": "Djibril Cissé",
+          "pos": "ST",
+          "accepts": [
+            "cisse"
+          ]
+        }
+      ]
     }
   ]
 }
