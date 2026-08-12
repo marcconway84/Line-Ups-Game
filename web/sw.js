@@ -67,7 +67,11 @@ self.addEventListener("fetch", function (event) {
 
   if (isPageRequest(request)) {
     event.respondWith(
-      fetch(request)
+      // cache: "reload" skips the browser's own HTTP cache on the way out. Without
+      // it "network-first" is only network-first as far as that cache, and GitHub
+      // Pages serves the page with a ten-minute lifetime - so a player could reload
+      // twice, be genuinely online, and still be handed the previous build.
+      fetch(new Request(request.url, { cache: "reload", credentials: "same-origin" }))
         .then(function (response) { return cacheCopy(request, response); })
         .catch(function () {
           // Offline: fall back to whatever copy of the game we have.

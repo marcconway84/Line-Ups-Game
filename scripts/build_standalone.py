@@ -17,6 +17,7 @@ headline numbers still agree.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -549,6 +550,7 @@ button.man:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px;
   background: none; border: 0; padding: 0; margin-left: 0.4rem; cursor: pointer;
   color: var(--pitch-line, var(--chalk)); font: inherit; text-decoration: underline;
 }
+.build { margin: 0.6rem 0 0; font-size: 0.62rem; color: var(--chalk-dim); opacity: 0.7; }
 .board { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
 .board td { padding: 0.28rem 0; border-bottom: var(--rule); color: var(--chalk-dim); }
 .board td.rank { width: 2.2rem; font-family: var(--data); }
@@ -716,6 +718,10 @@ MARKUP = """
       in the archive he also starts in. The more a clue gives away, the more it costs.</li>
     <li>Get all eleven before the whistle for a bonus, plus whatever time is left.</li>
   </ul>
+  <!-- Which build this is. Sounds like housekeeping; it is the difference between
+       "the change is not working" and "you are looking at yesterday's page", which
+       has cost real time to work out more than once. -->
+  <p class="build" id="build-stamp"></p>
   <button class="btn" type="button" data-close>Close</button>
 </dialog>
 
@@ -1430,6 +1436,7 @@ SCRIPT = r"""
 
   /* Days with a chosen puzzle. Everything else falls to the hash, which spreads
      evenly across the archive but has no sense of occasion. */
+  var BUILD = "__BUILD__";
   var DAILY_PICKS = __DAILY__;
 
   function dailyLineup(day) {
@@ -1775,6 +1782,7 @@ SCRIPT = r"""
 
   function goHome() { stopClock(); paintHome(); show("home"); }
 
+  $("build-stamp").textContent = "Build " + BUILD;
   $("go-quick").addEventListener("click", startQuick);
   $("go-again").addEventListener("click", startQuick);
   $("go-daily").addEventListener("click", startDaily);
@@ -1870,6 +1878,9 @@ def build(fragment: bool = False) -> str:
     script = script.replace("__PLAYER_FACTS__", player_facts_payload())
     script = script.replace("__LEADERBOARD__", leaderboard_payload())
     script = script.replace("__DAILY__", daily_payload({e["id"] for e in lineups}))
+    # Stamped last, over the finished script, so the mark changes whenever anything
+    # in the page does - the data, the rules, the leaderboard address, any of it.
+    script = script.replace("__BUILD__", hashlib.sha256(script.encode("utf-8")).hexdigest()[:8])
 
     if fragment:
         # Artifact hosting supplies the doctype/head/body wrapper itself.
