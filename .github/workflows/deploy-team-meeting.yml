@@ -1,0 +1,150 @@
+# Deploys the game server for the Team-Meeting quiz, from here.
+#
+# Why it lives in this repository rather than that one: this repository already
+# has a working CLOUDFLARE_API_TOKEN, and adding a second one over there was the
+# one step that could not be got at. Nothing of this repository's own is touched
+# - the workflow clones the other project (it is public), builds and tests its
+# worker, and deploys that.
+#
+# It needs no new secrets and creates none. In particular it does NOT touch the
+# host key, the passphrase that unlocks the start button. Both repositories are
+# public, so a key generated or echoed here would be published along with the
+# build log. It is set once, by hand, in the Cloudflare dashboard:
+#
+#   Workers & Pages -> quickfire-scores -> Settings -> Variables and Secrets
+#   -> Add -> type Secret, name HOST_KEY, value whatever you choose
+#
+# That way the only people who ever see it are the person who typed it and the
+# server it is checked against.
+name: Deploy the Team-Meeting game server
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      WORKER: quickfire-scores
+    steps:
+      - name: Check the credential is there
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is not set on this repository."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Fetch the game
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/marcconway84/team-meeting game
+          echo "Cloned $(git -C game rev-parse --short HEAD)"
+
+      - name: Install and test before deploying
+        working-directory: game/worker
+        run: |
+          npm install --no-fund --no-audit
+          npm test
+
+      - name: Find or create the database
+        id: database
+        working-directory: game/worker
+        run: |
+          set -euo pipefail
+          id=$(npx wrangler d1 list --json | jq -r --arg n "$WORKER" '.[] | select(.name == $n) | .uuid' || true)
+          if [ -z "$id" ]; then
+            echo "No database yet - creating one."
+            npx wrangler d1 create "$WORKER"
+            id=$(npx wrangler d1 list --json | jq -r --arg n "$WORKER" '.[] | select(.name == $n) | .uuid')
+          else
+            echo "Reusing the existing database."
+          fi
+          [ -n "$id" ] || { echo "::error::could not determine the database id"; exit 1; }
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+      - name: Point the config at it
+        working-directory: game/worker
+        run: sed -i "s/PLACEHOLDER/${{ steps.database.outputs.id }}/" wrangler.toml
+
+      - name: Apply the schema
+        working-directory: game/worker
+        run: npx wrangler d1 execute "$WORKER" --remote --file=schema.sql
+
+      - name: Is the host key set?
+        id: hostkey
+        working-directory: game/worker
+        run: |
+          set -euo pipefail
+          # Only whether it exists, never what it is.
+          if npx wrangler secret list --name "$WORKER" 2>/dev/null | grep -q HOST_KEY; then
+            echo "set=yes" >> "$GITHUB_OUTPUT"
+            echo "A host key is set."
+          else
+            echo "set=no" >> "$GITHUB_OUTPUT"
+            echo "::warning::No host key is set, so nobody can start a game yet. Add one in the Cloudflare dashboard."
+          fi
+
+      - name: Deploy
+        working-directory: game/worker
+        run: npx wrangler deploy 2>&1 | tee deploy.log
+
+      - name: Prove it actually works
+        working-directory: game/worker
+        run: |
+          set -euo pipefail
+          url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          echo "url=$url" >> "$GITHUB_ENV"
+          echo "Testing $url"
+
+          # The parts that need no key: the service answers, and it knows what a
+          # game is even before one has been opened.
+          curl -fsS "$url/game" | jq -e '.phase' > /dev/null
+          curl -fsS "$url/game" | jq -e '.seconds == 300' > /dev/null
+          curl -fsS "$url/health" | jq -e '.ok' > /dev/null
+
+          # And the part that matters most: a stranger cannot start the game.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/host/start" \
+            -H 'content-type: application/json' -d '{"key":"not-the-key"}')
+          [ "$code" = "403" ] || [ "$code" = "500" ] || {
+            echo "::error::the host routes are not guarded (HTTP $code)"; exit 1; }
+
+          # Nor can one score in a game that has not begun.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/progress" \
+            -H 'content-type: application/json' -d '{"player":"smoke","found":5,"clues":[]}')
+          [ "$code" = "400" ] || { echo "::error::scored before any game started (HTTP $code)"; exit 1; }
+
+          echo "Live service answered correctly."
+
+      - name: Say where it went
+        if: always()
+        run: |
+          {
+            echo "### Team-Meeting game server"
+            echo
+            if [ -n "${url:-}" ]; then
+              echo "Address: \`${url}\`"
+            else
+              echo "Deployed, but the address was not in the log - check the run above."
+            fi
+            echo
+            if [ "${{ steps.hostkey.outputs.set }}" = "yes" ]; then
+              echo "A host key is set. Open the game at \`?host=YOUR_KEY\` to get the start button."
+            else
+              echo "**No host key is set yet, so nobody can start a game.**"
+              echo
+              echo "Set one in the Cloudflare dashboard:"
+              echo "Workers & Pages -> \`quickfire-scores\` -> Settings -> Variables and Secrets"
+              echo "-> Add -> type **Secret**, name \`HOST_KEY\`, value whatever you choose."
+              echo
+              echo "It is deliberately not generated here: both repositories are public,"
+              echo "so anything this workflow printed would be published with the log."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
