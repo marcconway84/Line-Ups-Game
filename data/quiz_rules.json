@@ -1,0 +1,23 @@
+{
+  "_comment": "The quiz's scoring rules, written once. The browser inlines this at build time (scripts/build_quiz.py) and the leaderboard worker gets a copy through scripts/generate_worker_rules.py, so the score you see and the score the board keeps cannot drift apart.",
+
+  "secondsOnTheClock": 600,
+  "pointsPerQuestion": 100,
+
+  "_bonuses": "Every bonus needs a clean sheet - all twelve right, no reveals. That is what stops 'reveal everything, collect the finisher bonus' being a strategy, and it is why reveal itself is free.",
+  "finisherBonus": 250,
+  "pointsPerSecondRemaining": 2,
+  "cleanSweepBonus": 250,
+
+  "_clueCosts": "Priced by how much each one gives away. A question is worth 100, so an anagram at 65 still leaves 35 on the table - worth buying when you are stuck, never worth buying on spec.",
+  "clueCosts": {
+    "letters": 10,
+    "first": 20,
+    "initials": 30,
+    "hint": 45,
+    "novowels": 55,
+    "anagram": 65,
+    "choices": 75,
+    "reveal": 0
+  }
+}

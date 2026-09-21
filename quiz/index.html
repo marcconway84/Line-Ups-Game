@@ -1,0 +1,118 @@
+<!--
+  The quiz's markup. Every screen is present from the start and shown one at a time,
+  which keeps the whole page one static file with no templating and no build step
+  beyond inlining the packs - scripts/build_quiz.py does that and nothing else.
+
+  Placeholders written as __LIKE_THIS__ are filled in by the builder.
+-->
+<main id="app">
+
+  <header class="masthead">
+    <button type="button" class="wordmark" id="home-link" title="Back to the packs">
+      Quick<span>Fire</span>
+    </button>
+    <div class="scoreboard" id="scoreboard" hidden>
+      <div class="gauge" id="gauge-clock"><span class="gauge-label">Time</span><strong id="clock">10:00</strong></div>
+      <div class="gauge" id="gauge-score"><span class="gauge-label">Score</span><strong id="score">0</strong></div>
+      <div class="gauge"><span class="gauge-label">Right</span><strong id="tally">0/12</strong></div>
+    </div>
+    <nav>
+      <button type="button" class="textlink" id="rules-link">How to play</button>
+      <button type="button" class="textlink" id="quit-link" hidden>Give up</button>
+    </nav>
+  </header>
+
+  <!-- ------------------------------------------------------------ the packs -->
+  <section class="screen" id="screen-home">
+    <div class="intro">
+      <h1>Pick a round. Ten minutes on the clock.</h1>
+      <p class="lede">
+        Twelve questions, one shared clock, and a clue sheet for every question you
+        cannot crack. Clues cost points &mdash; so the winner is rarely the person who
+        knew the most, it is the person who knew when to pay.
+      </p>
+      <label class="namefield">
+        <span>Play as</span>
+        <input id="player-name" type="text" maxlength="24" placeholder="Your name" autocomplete="nickname" />
+      </label>
+      <p class="namenote" id="name-note">Used on the leaderboard your team shares. Nothing else is kept.</p>
+    </div>
+    <ul class="packs" id="pack-list"></ul>
+  </section>
+
+  <!-- ------------------------------------------------------------- the round -->
+  <section class="screen" id="screen-round" hidden>
+    <ol class="progress" id="progress"></ol>
+
+    <article class="question" id="question">
+      <p class="qnumber"><span id="q-index">Question 1 of 12</span><span class="qworth" id="q-worth">100 points</span></p>
+      <h2 id="q-prompt">&nbsp;</h2>
+
+      <form class="answerbar" id="answer-form" autocomplete="off">
+        <input id="answer-input" type="text" maxlength="60" placeholder="Type your answer" autocapitalize="words"
+               autocorrect="off" spellcheck="false" enterkeyhint="go" />
+        <button type="submit" class="primary">Answer</button>
+      </form>
+      <p class="verdict" id="verdict" role="status" aria-live="polite">&nbsp;</p>
+
+      <div class="resolved" id="resolved" hidden>
+        <p class="resolved-answer" id="resolved-answer"></p>
+        <p class="resolved-note" id="resolved-note"></p>
+      </div>
+
+      <div class="cluesheet" id="cluesheet">
+        <h3>Clue sheet <small>points come off your score</small></h3>
+        <ul class="clues" id="clue-list"></ul>
+      </div>
+
+      <div class="navrow">
+        <button type="button" class="ghost" id="prev-q">&larr; Previous</button>
+        <button type="button" class="ghost" id="next-q">Next &rarr;</button>
+      </div>
+    </article>
+  </section>
+
+  <!-- ----------------------------------------------------------- the result -->
+  <section class="screen" id="screen-result" hidden>
+    <div class="result-head">
+      <p class="result-kicker" id="result-kicker"></p>
+      <p class="result-total" id="result-total">0</p>
+      <p class="result-sub" id="result-sub"></p>
+    </div>
+    <table class="breakdown" id="breakdown"></table>
+    <div class="result-actions">
+      <button type="button" class="primary" id="share-btn">Copy my result</button>
+      <button type="button" class="ghost" id="again-btn">Another pack</button>
+    </div>
+    <section class="board" id="board" hidden>
+      <h3 id="board-title">Leaderboard</h3>
+      <table id="board-table"></table>
+      <p class="boardnote" id="board-note"></p>
+    </section>
+    <section class="answers">
+      <h3>The answers</h3>
+      <ol class="answerlist" id="answer-list"></ol>
+    </section>
+  </section>
+
+  <!-- ------------------------------------------------------------ how to play -->
+  <div class="sheet" id="rules-sheet" hidden>
+    <div class="sheet-inner">
+      <h2>How to play</h2>
+      <ul class="rulelist">
+        <li><strong>Twelve questions, ten minutes.</strong> One clock for the whole round, not one per question. Move between questions freely &mdash; skip the hard ones and come back.</li>
+        <li><strong>100 points a question.</strong> Answers are matched generously: near enough spelling counts, and accents and punctuation are optional.</li>
+        <li><strong>Clues cost points.</strong> The number of letters is 10, the first letter 20, an anagram 65, four options to choose from 75. Buy what you need and no more.</li>
+        <li><strong>Giving up on one is free.</strong> Revealing an answer costs nothing, but that question scores nothing &mdash; and it ends any hope of the bonuses.</li>
+        <li><strong>The bonuses need a clean sheet.</strong> All twelve right earns 250, plus 3 a second for whatever is left on the clock. Do it without buying a single clue and that is another 250.</li>
+        <li><strong>One go at each pack.</strong> Your first attempt is the one the leaderboard keeps, so no grinding it out.</li>
+      </ul>
+      <button type="button" class="primary" id="rules-close">Got it</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span id="build-mark">__BUILD__</span>
+  </footer>
+
+</main>

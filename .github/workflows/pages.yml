@@ -1,8 +1,9 @@
-# Publishes the installable version of the game to GitHub Pages.
+# Publishes the installable games to GitHub Pages: Line-Ups at the root, and
+# Quick Fire - the ten minute team quiz - at /quiz/.
 #
 # Before the first run, set Settings -> Pages -> Source to "GitHub Actions".
 # Note: on the free plan, Pages only serves public repositories.
-name: Publish game
+name: Publish the games
 
 on:
   push:
@@ -30,6 +31,11 @@ jobs:
 
       - name: Build the site
         run: python scripts/build_standalone.py --site
+
+      # Into a subfolder of the same upload, so one deploy serves both games and
+      # they can share the one leaderboard worker.
+      - name: Build the quiz
+        run: python scripts/build_quiz.py --site
 
       - uses: actions/upload-pages-artifact@v3
         with:

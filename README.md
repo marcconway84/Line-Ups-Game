@@ -78,6 +78,11 @@ data/lineups.json   the lineup archive
 db/schema.sql       Postgres reference schema
 frontend/           the browser client (no build step, no dependencies)
 tests/              pytest suite
+
+quiz/               Quick Fire: the team quiz (engine.js is the tested half)
+data/quizzes/       one file per quiz pack
+data/quiz_rules.json   its scoring, written once and copied to the worker
+worker/             the leaderboard both games share
 ```
 
 The rules and the matcher are deliberately free of database and clock access, so they
@@ -128,6 +133,92 @@ python -m backend.app.seed
 ```
 
 It validates the file first and refuses to write anything if a lineup is malformed.
+
+## Quick Fire &mdash; the ten minute team quiz
+
+A second game in the same repository, built for a work team rather than a football
+one. Twelve questions on one ten minute clock, a clue sheet you pay for out of your
+own score, and a leaderboard the team shares. People play whenever suits them and
+turn up to the meeting with a number to argue about.
+
+```
+QUICK FIRE                           TIME 7:42   SCORE 480   RIGHT 5/12
+[1][2][3][4][5][6][7][8][9][10][11][12]
+
+QUESTION 6 OF 12                                    100 POINTS, 30 SPENT
+Which gas do plants absorb from the air?
+
+  How long is it?       13 letters across two words (6, 7).      -10
+  The first letter      Begins with C.                           -20
+  The initials                                                   -30
+  A clue in words                                                -45
+  Vowels removed                                                 -55
+  An anagram                                                     -65
+  Four to choose from                                            -75
+  Just tell me                                        free, scores 0
+```
+
+**Playing.** `python scripts/build_quiz.py` writes `dist/quickfire.html` &mdash; one
+file, no server, no build step, opens from disk. Published to
+[`/quiz/`](https://marcconway84.github.io/Line-Ups-Game/quiz/) alongside Line-Ups by
+the same Pages workflow.
+
+**Scoring.** 100 a question. Clues come off the top, priced by how much they give
+away. All twelve right earns 250, plus 2 a second for what is left on the clock,
+plus another 250 if you did it without buying a single clue. Every bonus wants a
+clean sheet, which is why revealing an answer is free: it costs you the question and
+the bonuses, and so cannot be played as a strategy.
+
+**Clues are computed, not written.** An anagram is generated, the vowels are taken
+out, the initials are read off. Writing a pack is a list of questions and answers,
+and the whole clue sheet comes with it &mdash; it cannot go stale, and
+`worker/test/quiz-engine.test.js` checks every clue against every answer in every
+pack. A clue that would say nothing is left off: no initials on a one word answer.
+
+**Answers are matched generously.** Case, accents and punctuation are optional
+(`Pique` finds `Piqué`), a leading "the" is ignored either way, and a typo or two is
+forgiven on anything long enough to mistype. Short answers must be exact.
+
+### Writing a pack
+
+One file in `data/quizzes/`. The id is the filename you want in the leaderboard, and
+everything past `prompt` and `answer` is optional:
+
+```json
+{
+  "id": "your-subject",
+  "title": "Your Subject",
+  "subject": "What it is about",
+  "blurb": "One line for the pack list.",
+  "questions": [
+    {
+      "prompt": "Which gas do plants absorb from the air?",
+      "answer": "Carbon dioxide",
+      "accept": ["co2"],
+      "hint": "Two words. You breathe it out.",
+      "decoys": ["Oxygen", "Nitrogen", "Methane"],
+      "note": "Shown on the results page, for the 'ah, of course' moment."
+    }
+  ]
+}
+```
+
+`accept` adds aliases, `hint` adds the one clue that cannot be computed, `decoys`
+supply the three wrong options (without them the game borrows other answers from the
+pack, which works but reads oddly), and `note` is the bit of colour shown afterwards.
+
+Aim for answers of one to four words, and avoid bare numbers &mdash; "begins with F"
+is a poor clue for `Four`. The build refuses a pack that would play badly: too few
+questions, a repeated question, two questions sharing an answer, an answer too short
+to make clues from, or a half-written decoy set. After adding a pack, re-run
+`python scripts/generate_worker_rules.py` so the leaderboard knows how long it is.
+
+```bash
+python scripts/build_quiz.py          # rebuild the page
+python scripts/generate_worker_rules.py
+pytest tests/test_quiz.py
+cd worker && npm test
+```
 
 ## Ideas for later
 

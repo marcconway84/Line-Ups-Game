@@ -1,0 +1,88 @@
+{
+  "id": "tech-and-the-web",
+  "title": "Tech & The Web",
+  "subject": "Computing and the internet",
+  "blurb": "Acronyms, origin stories and the names things had before they had good names.",
+  "questions": [
+    {
+      "prompt": "Who is credited with inventing the World Wide Web?",
+      "answer": "Tim Berners-Lee",
+      "accept": ["berners lee", "berners-lee", "tim berners lee"],
+      "hint": "He wrote the proposal at CERN in 1989, and his boss called it 'vague but exciting'.",
+      "decoys": ["Vint Cerf", "Marc Andreessen", "Robert Kahn"],
+      "note": "Vint Cerf and Bob Kahn built the internet's plumbing - TCP/IP. The Web sits on top of it."
+    },
+    {
+      "prompt": "Which programming language was created by Guido van Rossum?",
+      "answer": "Python",
+      "hint": "Named after a comedy troupe, not the snake.",
+      "decoys": ["Ruby", "Perl", "PHP"]
+    },
+    {
+      "prompt": "What does the S in HTTPS stand for?",
+      "answer": "Secure",
+      "hint": "It is what the padlock in the address bar is promising you.",
+      "decoys": ["Standard", "Server", "Socket"]
+    },
+    {
+      "prompt": "Which search engine was originally called BackRub?",
+      "answer": "Google",
+      "hint": "The first name described what it did: it read the backlinks pointing at a page.",
+      "decoys": ["Yahoo", "AltaVista", "Bing"]
+    },
+    {
+      "prompt": "What does CPU stand for?",
+      "answer": "Central Processing Unit",
+      "accept": ["central processor unit"],
+      "hint": "Three words. The middle one is what it spends all day doing.",
+      "decoys": ["Computer Power Unit", "Central Program Utility", "Core Processing Unit"]
+    },
+    {
+      "prompt": "Which social network launched under the name Twttr?",
+      "answer": "Twitter",
+      "accept": ["x", "twitter x"],
+      "hint": "The vowels were dropped because five-character usernames were fashionable at the time.",
+      "decoys": ["Tumblr", "Flickr", "Foursquare"]
+    },
+    {
+      "prompt": "Which company makes the PlayStation?",
+      "answer": "Sony",
+      "hint": "A Japanese company, and the console began life as a CD add-on for a Nintendo machine.",
+      "decoys": ["Sega", "Nintendo", "Panasonic"]
+    },
+    {
+      "prompt": "What does RAM stand for?",
+      "answer": "Random Access Memory",
+      "hint": "Three words. The first one means you can reach any part of it as quickly as any other.",
+      "decoys": ["Rapid Access Memory", "Read Access Module", "Runtime Allocated Memory"]
+    },
+    {
+      "prompt": "Which image format is short for Joint Photographic Experts Group?",
+      "answer": "JPEG",
+      "accept": ["jpg"],
+      "hint": "Four letters, and it is probably the format of every photo on your phone.",
+      "decoys": ["PNG", "GIF", "TIFF"]
+    },
+    {
+      "prompt": "Which operating system kernel did Linus Torvalds create?",
+      "answer": "Linux",
+      "hint": "He announced it in 1991 as 'just a hobby, won't be big and professional'.",
+      "decoys": ["Unix", "BSD", "Minix"],
+      "note": "It now runs most of the servers on the internet, and every Android phone."
+    },
+    {
+      "prompt": "What is the name of Amazon's cloud computing platform?",
+      "answer": "Amazon Web Services",
+      "accept": ["aws", "amazon aws"],
+      "hint": "Three words, and it is usually shortened to three letters.",
+      "decoys": ["Azure", "Google Cloud", "Amazon Compute Cloud"]
+    },
+    {
+      "prompt": "Which messaging app did Facebook buy for around $19 billion in 2014?",
+      "answer": "WhatsApp",
+      "accept": ["whats app", "what's app"],
+      "hint": "It had 55 staff at the time of the sale.",
+      "decoys": ["Instagram", "Snapchat", "Telegram"]
+    }
+  ]
+}

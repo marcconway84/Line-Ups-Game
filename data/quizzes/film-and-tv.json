@@ -1,0 +1,89 @@
+{
+  "id": "film-and-tv",
+  "title": "Film & TV",
+  "subject": "Screen trivia",
+  "blurb": "Directors, ships, hotels and one coffee shop. The pack most likely to start an argument.",
+  "questions": [
+    {
+      "prompt": "Who directed Jaws, E.T. and Jurassic Park?",
+      "answer": "Steven Spielberg",
+      "accept": ["spielberg"],
+      "hint": "The shark in the first of those barely worked, which is why you hardly see it.",
+      "decoys": ["George Lucas", "Ridley Scott", "James Cameron"]
+    },
+    {
+      "prompt": "Which actor plays Captain Jack Sparrow?",
+      "answer": "Johnny Depp",
+      "accept": ["depp"],
+      "hint": "He based the performance on Keith Richards, to the studio's considerable alarm.",
+      "decoys": ["Orlando Bloom", "Russell Crowe", "Javier Bardem"]
+    },
+    {
+      "prompt": "Which animated film follows a clownfish named Marlin searching for his son?",
+      "answer": "Finding Nemo",
+      "hint": "Two words, and the second is the son's name.",
+      "decoys": ["Shark Tale", "The Little Mermaid", "Moana"]
+    },
+    {
+      "prompt": "What is the name of the coffee shop in Friends?",
+      "answer": "Central Perk",
+      "accept": ["centralperk"],
+      "hint": "Two words, and it is a pun on a New York park.",
+      "decoys": ["Cafe Nervosa", "Luke's Diner", "The Coffee Bean"]
+    },
+    {
+      "prompt": "Which actor plays Iron Man in the Marvel films?",
+      "answer": "Robert Downey Jr",
+      "accept": ["robert downey junior", "downey", "rdj", "robert downey"],
+      "hint": "He was a famously risky piece of casting in 2008, and the whole run of films hung on it.",
+      "decoys": ["Chris Evans", "Mark Ruffalo", "Jeremy Renner"]
+    },
+    {
+      "prompt": "In which television series would you find the Iron Throne?",
+      "answer": "Game of Thrones",
+      "accept": ["got", "a game of thrones"],
+      "hint": "Three words. Adapted from novels by George R. R. Martin.",
+      "decoys": ["The Witcher", "House of the Dragon", "Vikings"]
+    },
+    {
+      "prompt": "Which 1997 film starred Kate Winslet and Leonardo DiCaprio aboard a doomed liner?",
+      "answer": "Titanic",
+      "hint": "It held the record for the highest-grossing film for twelve years.",
+      "decoys": ["The Poseidon Adventure", "A Night to Remember", "Pearl Harbor"]
+    },
+    {
+      "prompt": "Who played Hermione Granger in the Harry Potter films?",
+      "answer": "Emma Watson",
+      "accept": ["watson"],
+      "hint": "She was nine years old at the first audition.",
+      "decoys": ["Emma Stone", "Bonnie Wright", "Evanna Lynch"]
+    },
+    {
+      "prompt": "The US version of The Office is set in which Pennsylvania city?",
+      "answer": "Scranton",
+      "hint": "The paper company's branch is there, and the city now has a real welcome sign quoting the show.",
+      "decoys": ["Stamford", "Pittsburgh", "Allentown"]
+    },
+    {
+      "prompt": "What is the name of the hotel in The Shining?",
+      "answer": "Overlook",
+      "accept": ["the overlook", "overlook hotel", "the overlook hotel"],
+      "hint": "One word, and it is what the building does to the valley below it.",
+      "decoys": ["Bates Motel", "The Grand Budapest", "Hotel Earle"]
+    },
+    {
+      "prompt": "Which director made Pulp Fiction and Kill Bill?",
+      "answer": "Quentin Tarantino",
+      "accept": ["tarantino"],
+      "hint": "He worked in a video rental shop before his first film.",
+      "decoys": ["Robert Rodriguez", "Guy Ritchie", "Martin Scorsese"]
+    },
+    {
+      "prompt": "In Star Wars, what is the name of Han Solo's ship?",
+      "answer": "Millennium Falcon",
+      "accept": ["the millennium falcon", "millenium falcon"],
+      "hint": "Two words, and the first is commonly misspelled with one N too few.",
+      "decoys": ["Serenity", "Rocinante", "Nostromo"]
+    }
+  ]
+}

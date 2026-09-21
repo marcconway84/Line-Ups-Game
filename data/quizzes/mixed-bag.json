@@ -1,0 +1,91 @@
+{
+  "id": "mixed-bag",
+  "title": "Mixed Bag",
+  "subject": "General knowledge",
+  "blurb": "A dozen from everywhere. The warm-up pack - nobody can claim it was rigged for their specialist subject.",
+  "questions": [
+    {
+      "prompt": "What is the capital of Australia?",
+      "answer": "Canberra",
+      "hint": "Not the biggest city in the country, nor the second biggest - it was built as a compromise between the two.",
+      "decoys": ["Sydney", "Melbourne", "Perth"],
+      "note": "Chosen in 1908 precisely because Sydney and Melbourne could not agree."
+    },
+    {
+      "prompt": "Which metal is liquid at room temperature?",
+      "answer": "Mercury",
+      "accept": ["quicksilver"],
+      "hint": "It shares its name with a planet and a Roman god.",
+      "decoys": ["Sodium", "Gallium", "Lithium"],
+      "note": "Gallium is the near miss - it melts at about 30C, so it will melt in your hand but not on the table."
+    },
+    {
+      "prompt": "Which instrument has 88 keys?",
+      "answer": "Piano",
+      "accept": ["pianoforte"],
+      "hint": "52 of the keys are white and 36 are black.",
+      "decoys": ["Organ", "Harpsichord", "Accordion"]
+    },
+    {
+      "prompt": "Which is the deepest ocean on Earth?",
+      "answer": "Pacific",
+      "accept": ["pacific ocean", "the pacific"],
+      "hint": "The Mariana Trench is in it.",
+      "decoys": ["Atlantic", "Indian", "Arctic"],
+      "note": "The Challenger Deep runs to about 10,900m - Everest would sit under it with a mile to spare."
+    },
+    {
+      "prompt": "Who painted the Mona Lisa?",
+      "answer": "Leonardo da Vinci",
+      "accept": ["da vinci", "leonardo", "davinci"],
+      "hint": "He also drew a rather famous man in a circle.",
+      "decoys": ["Michelangelo", "Raphael", "Caravaggio"]
+    },
+    {
+      "prompt": "Which gas do plants absorb from the air?",
+      "answer": "Carbon dioxide",
+      "accept": ["co2", "carbon dioxide gas"],
+      "hint": "Two words. You breathe it out.",
+      "decoys": ["Oxygen", "Nitrogen", "Methane"]
+    },
+    {
+      "prompt": "Which country gifted the Statue of Liberty to the United States?",
+      "answer": "France",
+      "hint": "The sculptor was Frederic Auguste Bartholdi, and Gustave Eiffel built the frame.",
+      "decoys": ["Britain", "Italy", "Spain"],
+      "note": "A gift in 1886 marking a century of American independence."
+    },
+    {
+      "prompt": "What is the hardest naturally occurring substance on Earth?",
+      "answer": "Diamond",
+      "hint": "It is pure carbon, like the graphite in a pencil - the difference is only how the atoms are stacked.",
+      "decoys": ["Quartz", "Graphite", "Titanium"]
+    },
+    {
+      "prompt": "What is the largest animal on Earth?",
+      "answer": "Blue whale",
+      "accept": ["blue whale", "the blue whale"],
+      "hint": "Two words. Its heart alone weighs about as much as a small car.",
+      "decoys": ["African elephant", "Sperm whale", "Giant squid"]
+    },
+    {
+      "prompt": "In which city would you find the Colosseum?",
+      "answer": "Rome",
+      "hint": "The stadium held something like 50,000 people, and the city still has the aqueducts that watered them.",
+      "decoys": ["Athens", "Naples", "Istanbul"]
+    },
+    {
+      "prompt": "What is the longest river in Africa?",
+      "answer": "Nile",
+      "accept": ["the nile", "river nile"],
+      "hint": "It runs north, which surprises people, and empties into the Mediterranean.",
+      "decoys": ["Congo", "Niger", "Zambezi"]
+    },
+    {
+      "prompt": "Which Shakespeare play features the characters Rosencrantz and Guildenstern?",
+      "answer": "Hamlet",
+      "hint": "The pair were later given a play of their own by Tom Stoppard.",
+      "decoys": ["Macbeth", "Othello", "King Lear"]
+    }
+  ]
+}

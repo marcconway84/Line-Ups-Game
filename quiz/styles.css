@@ -1,0 +1,462 @@
+/* ---------------------------------------------------------------------------
+   Quick Fire: a quiz-night scoreboard. Ink blue, amber lamps, chalk numerals.
+   A cousin of the tactics board the football game is painted on, deliberately
+   not the same room.
+
+   Unlike that game, this page scrolls. Question prompts vary in length and a
+   clue sheet grows as clues are bought, so pinning everything to one viewport
+   would mean clipping the thing the player is reading. Every colour is painted
+   explicitly - there is one visual world here, not a light and a dark one.
+   --------------------------------------------------------------------------- */
+:root {
+  --ink:       #101827;
+  --ink-deep:  #0a0f1a;
+  --panel:     #18233a;
+  --panel-2:   #1f2d49;
+  --chalk:     #eef2f8;
+  --chalk-dim: #94a3b8;
+  --line:      rgba(238, 242, 248, 0.16);
+  --amber:     #f0b429;
+  --amber-deep:#c98b12;
+  --right:     #3fb27f;
+  --wrong:     #e2574c;
+
+  --display: "Haettenschweiler", "Arial Narrow", "Helvetica Neue", Impact, sans-serif;
+  --body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --data: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --rule: 1px solid var(--line);
+  --pad: clamp(0.85rem, 4vw, 1.5rem);
+  --wide: 44rem;
+}
+
+* { box-sizing: border-box; }
+
+/* The game hides screens, gauges and the answer bar with the hidden attribute, and
+   several of them carry a display rule of their own - which quietly wins, because
+   [hidden]'s display:none is only a default in the user agent stylesheet. Without
+   this the scoreboard follows you onto the results page. */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--ink-deep);
+  background-image:
+    radial-gradient(1200px 500px at 50% -10%, rgba(240, 180, 41, 0.10), transparent 70%);
+  color: var(--chalk);
+  font-family: var(--body);
+  line-height: 1.5;
+}
+
+#app {
+  max-width: var(--wide);
+  margin: 0 auto;
+  padding: 0 var(--pad) 3rem;
+}
+
+h1, h2, h3 { line-height: 1.2; }
+
+/* -------------------------------------------------------------- masthead */
+.masthead {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0;
+  background: var(--ink-deep);
+  border-bottom: var(--rule);
+}
+
+.wordmark {
+  font-family: var(--display);
+  font-size: 1.35rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  background: none;
+  border: 0;
+  color: var(--chalk);
+  padding: 0;
+  cursor: pointer;
+  line-height: 1;
+}
+.wordmark span { color: var(--amber); }
+
+.masthead nav { display: flex; gap: 0.8rem; align-items: center; }
+
+.textlink {
+  background: none;
+  border: 0;
+  color: var(--chalk-dim);
+  font: 600 0.7rem/1 var(--body);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid transparent;
+}
+.textlink:hover, .textlink:focus-visible { color: var(--amber); border-bottom-color: var(--amber); }
+
+/* The three gauges. Monospaced so the clock does not jog the layout every second. */
+.scoreboard { display: flex; gap: 0.5rem; order: 3; width: 100%; }
+@media (min-width: 34rem) { .scoreboard { order: 0; width: auto; } }
+
+.gauge {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border: var(--rule);
+  border-radius: 0.4rem;
+  background: var(--panel);
+  min-width: 4.5rem;
+}
+.gauge-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+}
+.gauge strong { font: 700 1.05rem/1.2 var(--data); font-variant-numeric: tabular-nums; }
+#gauge-clock.urgent strong { color: var(--wrong); }
+#gauge-clock.urgent { border-color: var(--wrong); }
+
+/* ------------------------------------------------------------------ home */
+.intro { padding: 1.6rem 0 0.6rem; }
+.intro h1 {
+  font-family: var(--display);
+  font-size: clamp(1.7rem, 7vw, 2.6rem);
+  letter-spacing: 0.01em;
+  margin: 0 0 0.6rem;
+  text-wrap: balance;
+}
+.lede { color: var(--chalk-dim); margin: 0 0 1.2rem; max-width: 34rem; }
+
+.namefield { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.namefield > span {
+  font: 600 0.7rem/1 var(--body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+}
+.namefield input {
+  flex: 1 1 12rem;
+  padding: 0.6rem 0.75rem;
+  border: var(--rule);
+  border-radius: 0.4rem;
+  background: var(--panel);
+  color: var(--chalk);
+  font: 600 1rem/1.2 var(--body);
+}
+.namefield input:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+.namenote { font-size: 0.78rem; color: var(--chalk-dim); margin: 0.5rem 0 0; }
+
+.packs { list-style: none; padding: 0; margin: 1.4rem 0 0; display: grid; gap: 0.9rem; }
+
+.pack {
+  width: 100%;
+  text-align: left;
+  display: block;
+  padding: 1rem 1.1rem;
+  border: var(--rule);
+  border-left: 3px solid var(--amber);
+  border-radius: 0.5rem;
+  background: var(--panel);
+  color: var(--chalk);
+  cursor: pointer;
+  font: inherit;
+}
+.pack:hover, .pack:focus-visible { background: var(--panel-2); outline: none; border-left-color: var(--chalk); }
+.pack h2 { font-family: var(--display); font-size: 1.4rem; letter-spacing: 0.02em; margin: 0; }
+.pack .subject {
+  font: 600 0.62rem/1 var(--body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber);
+  display: block;
+  margin-bottom: 0.35rem;
+}
+.pack p { color: var(--chalk-dim); font-size: 0.88rem; margin: 0.45rem 0 0; }
+.pack .packmeta {
+  margin-top: 0.7rem;
+  font: 500 0.75rem/1.4 var(--data);
+  color: var(--chalk-dim);
+  display: flex;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+.pack .packmeta .played { color: var(--amber); }
+
+/* ----------------------------------------------------------------- round */
+.progress {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 0.3rem;
+  padding: 0;
+  margin: 1.1rem 0 1.2rem;
+}
+.progress button {
+  width: 100%;
+  aspect-ratio: 1;
+  border: var(--rule);
+  border-radius: 0.3rem;
+  background: var(--panel);
+  color: var(--chalk-dim);
+  font: 700 0.75rem/1 var(--data);
+  cursor: pointer;
+  padding: 0;
+}
+.progress button:hover { border-color: var(--chalk-dim); }
+.progress .is-right   { background: var(--right); border-color: var(--right); color: var(--ink-deep); }
+.progress .is-shown   { background: var(--panel-2); border-color: var(--chalk-dim); color: var(--chalk-dim); text-decoration: line-through; }
+.progress .is-hinted  { border-color: var(--amber); color: var(--amber); }
+.progress .is-current { outline: 2px solid var(--amber); outline-offset: 1px; }
+
+.question { border-top: var(--rule); padding-top: 1.1rem; }
+.qnumber {
+  display: flex;
+  justify-content: space-between;
+  font: 600 0.65rem/1 var(--body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+  margin: 0 0 0.6rem;
+}
+.qworth { color: var(--amber); }
+.question h2 {
+  font-size: clamp(1.15rem, 4.6vw, 1.5rem);
+  margin: 0 0 1.1rem;
+  text-wrap: pretty;
+}
+
+.answerbar { display: flex; gap: 0.5rem; }
+.answerbar input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.7rem 0.8rem;
+  border: var(--rule);
+  border-radius: 0.4rem;
+  background: var(--panel);
+  color: var(--chalk);
+  font: 600 1.05rem/1.2 var(--body);
+}
+.answerbar input:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+
+.primary {
+  border: 0;
+  border-radius: 0.4rem;
+  background: var(--amber);
+  color: var(--ink-deep);
+  font: 700 0.8rem/1 var(--body);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0 1.1rem;
+  cursor: pointer;
+  min-height: 2.75rem;
+}
+.primary:hover { background: var(--amber-deep); }
+
+.ghost {
+  border: var(--rule);
+  border-radius: 0.4rem;
+  background: none;
+  color: var(--chalk-dim);
+  font: 600 0.72rem/1 var(--body);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+}
+.ghost:hover:not(:disabled) { color: var(--chalk); border-color: var(--chalk-dim); }
+.ghost:disabled { opacity: 0.35; cursor: default; }
+
+.verdict { min-height: 1.5rem; margin: 0.6rem 0 0; font-size: 0.9rem; font-weight: 600; }
+.verdict.good { color: var(--right); }
+.verdict.bad  { color: var(--wrong); }
+.verdict.soft { color: var(--chalk-dim); font-weight: 500; }
+
+.resolved {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: var(--rule);
+  border-left: 3px solid var(--right);
+  border-radius: 0.4rem;
+  background: var(--panel);
+}
+.resolved.shown { border-left-color: var(--chalk-dim); }
+.resolved-answer { margin: 0; font: 700 1.15rem/1.3 var(--body); }
+.resolved-note { margin: 0.45rem 0 0; color: var(--chalk-dim); font-size: 0.86rem; }
+.resolved-note:empty { display: none; }
+
+/* ------------------------------------------------------------ clue sheet */
+.cluesheet { margin-top: 1.4rem; }
+.cluesheet h3 {
+  font: 600 0.68rem/1 var(--body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+  margin: 0 0 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+}
+.cluesheet h3 small { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: none; opacity: 0.8; }
+
+.clues { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.4rem; }
+.clue {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border: var(--rule);
+  border-radius: 0.4rem;
+  background: var(--panel);
+  color: var(--chalk);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+.clue:hover:not(:disabled) { background: var(--panel-2); }
+.clue:disabled { cursor: default; }
+.clue .cluename { flex: 1; }
+.clue .cost {
+  font: 700 0.8rem/1 var(--data);
+  color: var(--amber);
+  white-space: nowrap;
+}
+.clue.bought { border-left: 3px solid var(--amber); }
+.clue.bought .cost { color: var(--chalk-dim); }
+.clue .given {
+  display: block;
+  font: 700 1rem/1.3 var(--data);
+  letter-spacing: 0.1em;
+  color: var(--amber);
+  margin-top: 0.25rem;
+  overflow-wrap: anywhere;
+}
+.clue .given.plain { font-family: var(--body); letter-spacing: normal; font-weight: 600; }
+
+.choicelist { list-style: none; padding: 0; margin: 0.5rem 0 0; display: grid; gap: 0.35rem; }
+.choicelist li {
+  padding: 0.5rem 0.7rem;
+  border: var(--rule);
+  border-radius: 0.35rem;
+  font: 600 0.92rem/1.3 var(--body);
+  background: var(--panel-2);
+}
+
+.navrow { display: flex; justify-content: space-between; gap: 0.6rem; margin-top: 1.6rem; }
+
+/* ---------------------------------------------------------------- result */
+.result-head { text-align: center; padding: 2rem 0 1.2rem; }
+.result-kicker {
+  font: 600 0.7rem/1 var(--body);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin: 0 0 0.5rem;
+}
+.result-total {
+  font-family: var(--display);
+  font-size: clamp(3.4rem, 18vw, 5.5rem);
+  line-height: 0.9;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.result-sub { color: var(--chalk-dim); margin: 0.6rem 0 0; }
+
+.breakdown, #board-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.breakdown td, #board-table td, #board-table th {
+  padding: 0.5rem 0.2rem;
+  border-bottom: var(--rule);
+  text-align: left;
+}
+.breakdown td:last-child, #board-table td:last-child {
+  text-align: right;
+  font-family: var(--data);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.breakdown tr.total td { font-weight: 700; border-bottom: 0; border-top: 2px solid var(--line); }
+.breakdown td.minus { color: var(--wrong); }
+.breakdown td.bonus { color: var(--amber); }
+
+.result-actions { display: flex; gap: 0.6rem; margin: 1.4rem 0; flex-wrap: wrap; }
+.result-actions .primary { flex: 1 1 12rem; min-height: 2.9rem; }
+
+.board, .answers { margin-top: 2rem; }
+.board h3, .answers h3 {
+  font: 600 0.7rem/1 var(--body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+  margin: 0 0 0.7rem;
+}
+#board-table th {
+  font: 600 0.6rem/1 var(--body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+}
+#board-table tr.you td { color: var(--amber); font-weight: 700; }
+.boardnote { color: var(--chalk-dim); font-size: 0.8rem; margin: 0.7rem 0 0; }
+
+.answerlist { padding-left: 1.3rem; display: grid; gap: 0.9rem; margin: 0; }
+.answerlist li::marker { color: var(--chalk-dim); font-family: var(--data); font-size: 0.8rem; }
+.answerlist .aq { margin: 0; font-size: 0.9rem; color: var(--chalk-dim); }
+.answerlist .aa { margin: 0.15rem 0 0; font-weight: 700; }
+.answerlist .aa.missed { color: var(--wrong); }
+.answerlist .aa.got { color: var(--right); }
+.answerlist .an { margin: 0.25rem 0 0; font-size: 0.82rem; color: var(--chalk-dim); }
+
+/* ----------------------------------------------------------- how to play */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(10, 15, 26, 0.82);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+}
+@media (min-width: 34rem) { .sheet { align-items: center; } }
+.sheet-inner {
+  width: 100%;
+  max-width: 32rem;
+  background: var(--panel);
+  border: var(--rule);
+  border-radius: 0.6rem;
+  padding: 1.3rem;
+}
+.sheet-inner h2 { font-family: var(--display); font-size: 1.6rem; margin: 0 0 0.9rem; letter-spacing: 0.02em; }
+.rulelist { padding-left: 1.1rem; margin: 0 0 1.2rem; display: grid; gap: 0.6rem; font-size: 0.9rem; }
+.rulelist li::marker { color: var(--amber); }
+.sheet-inner .primary { width: 100%; }
+
+.footer {
+  margin-top: 2.5rem;
+  padding-top: 0.8rem;
+  border-top: var(--rule);
+  font: 500 0.66rem/1 var(--data);
+  color: var(--chalk-dim);
+  opacity: 0.6;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .verdict.good, .verdict.bad { animation: nudge 0.25s ease-out; }
+  @keyframes nudge { from { transform: translateY(-3px); opacity: 0; } to { transform: none; opacity: 1; } }
+}

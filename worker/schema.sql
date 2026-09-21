@@ -36,3 +36,24 @@ CREATE TABLE IF NOT EXISTS rate (
   hits       INTEGER NOT NULL,
   created_at INTEGER NOT NULL
 );
+
+-- Quick Fire's board. A separate table rather than a shared one with a game column:
+-- the two games record different things about a round, and a column that is only
+-- meaningful for half the rows is a column nobody can trust.
+CREATE TABLE IF NOT EXISTS quiz_scores (
+  pack          TEXT    NOT NULL,
+  player        TEXT    NOT NULL,   -- the same browser-kept random id; not a login
+  name          TEXT    NOT NULL,
+  score         INTEGER NOT NULL,
+  right_answers INTEGER NOT NULL,
+  questions     INTEGER NOT NULL,
+  clues         INTEGER NOT NULL,   -- how many were bought, not which
+  seconds_left  INTEGER NOT NULL,
+  created_at    INTEGER NOT NULL,   -- unix ms
+
+  -- First attempt only, same as the football board and for the same reason: a pack
+  -- whose answers you have already seen is not a pack you can be ranked on.
+  PRIMARY KEY (pack, player)
+);
+
+CREATE INDEX IF NOT EXISTS quiz_scores_by_pack ON quiz_scores (pack, score DESC, created_at ASC);
